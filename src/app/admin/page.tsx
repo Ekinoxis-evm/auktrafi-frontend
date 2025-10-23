@@ -5,6 +5,7 @@ import { VaultList } from '@/components/VaultList'
 import { CreateVault } from '@/components/CreateVault'
 import { FundWallet } from '@/components/FundWallet'
 import { BalanceCard } from '@/components/BalanceCard'
+import { NetworkSwitcher } from '@/components/NetworkSwitcher'
 import { useAccount } from 'wagmi'
 import Link from 'next/link'
 
@@ -16,7 +17,7 @@ export default function AdminPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-8">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -26,7 +27,7 @@ export default function AdminPage() {
                   Business Management Dashboard
                 </p>
               </div>
-              <nav className="flex gap-4">
+              <nav className="hidden md:flex gap-4">
                 <Link 
                   href="/admin"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium"
@@ -41,7 +42,10 @@ export default function AdminPage() {
                 </Link>
               </nav>
             </div>
-            <WalletConnect />
+            <div className="flex items-center gap-3">
+              <NetworkSwitcher />
+              <WalletConnect />
+            </div>
           </div>
         </div>
       </header>

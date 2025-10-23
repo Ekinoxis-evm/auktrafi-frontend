@@ -2,85 +2,61 @@
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import DigitalHouseVaultABI from '@/contracts/DigitalHouseVault.json'
+import { Address } from 'viem'
 
-export function useDigitalHouseVault(vaultAddress: `0x${string}`) {
+export function useDigitalHouseVault(vaultAddress: Address) {
   // Read functions
-  
-  // Get all auction bids
-  const { data: auctionBids, refetch: refetchBids } = useReadContract({
-    address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
-    functionName: 'getAuctionBids',
-  })
-
-  // Get base price
-  const { data: basePrice } = useReadContract({
-    address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
-    functionName: 'basePrice',
-  })
-
-  // Get vault info
   const { data: vaultInfo } = useReadContract({
     address: vaultAddress,
     abi: DigitalHouseVaultABI.abi,
     functionName: 'getVaultInfo',
   })
 
-  // Get current state
+  const { data: currentReservation, refetch: refetchReservation } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'getCurrentReservation',
+  })
+
+  const { data: auctionBids, refetch: refetchBids } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'getAuctionBids',
+  })
+
   const { data: currentState } = useReadContract({
     address: vaultAddress,
     abi: DigitalHouseVaultABI.abi,
     functionName: 'currentState',
   })
 
-  // Get current reservation
-  const { data: currentReservation } = useReadContract({
+  const { data: basePrice } = useReadContract({
     address: vaultAddress,
     abi: DigitalHouseVaultABI.abi,
-    functionName: 'getCurrentReservation',
+    functionName: 'basePrice',
+  })
+
+  const { data: vaultId } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'vaultId',
+  })
+
+  const { data: propertyDetails } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'propertyDetails',
   })
 
   // Write functions
   const { 
     data: hash,
     isPending,
-    writeContract,
-    error: writeError
+    writeContract 
   } = useWriteContract()
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = 
     useWaitForTransactionReceipt({ hash })
-
-  // Place a bid
-  const placeBid = async (bidAmount: bigint) => {
-    return writeContract({
-      address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
-      functionName: 'placeBid',
-      args: [bidAmount],
-    })
-  }
-
-  // Withdraw a bid
-  const withdrawBid = async (bidIndex: bigint) => {
-    return writeContract({
-      address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
-      functionName: 'withdrawBid',
-      args: [bidIndex],
-    })
-  }
-
-  // Cede reservation
-  const cedeReservation = async (bidIndex: bigint) => {
-    return writeContract({
-      address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
-      functionName: 'cedeReservation',
-      args: [bidIndex],
-    })
-  }
 
   // Create reservation
   const createReservation = async (
@@ -96,12 +72,33 @@ export function useDigitalHouseVault(vaultAddress: `0x${string}`) {
     })
   }
 
-  // Cancel reservation
-  const cancelReservation = async () => {
+  // Place bid
+  const placeBid = async (bidAmount: bigint) => {
     return writeContract({
       address: vaultAddress,
       abi: DigitalHouseVaultABI.abi,
-      functionName: 'cancelReservation',
+      functionName: 'placeBid',
+      args: [bidAmount],
+    })
+  }
+
+  // Cede reservation
+  const cedeReservation = async (bidIndex: bigint) => {
+    return writeContract({
+      address: vaultAddress,
+      abi: DigitalHouseVaultABI.abi,
+      functionName: 'cedeReservation',
+      args: [bidIndex],
+    })
+  }
+
+  // Withdraw bid
+  const withdrawBid = async (bidIndex: bigint) => {
+    return writeContract({
+      address: vaultAddress,
+      abi: DigitalHouseVaultABI.abi,
+      functionName: 'withdrawBid',
+      args: [bidIndex],
     })
   }
 
@@ -123,30 +120,63 @@ export function useDigitalHouseVault(vaultAddress: `0x${string}`) {
     })
   }
 
+  // Cancel reservation
+  const cancelReservation = async () => {
+    return writeContract({
+      address: vaultAddress,
+      abi: DigitalHouseVaultABI.abi,
+      functionName: 'cancelReservation',
+    })
+  }
+
   return {
     // Read data
-    auctionBids,
-    basePrice,
     vaultInfo,
-    currentState,
     currentReservation,
+    auctionBids,
+    currentState,
+    basePrice,
+    vaultId,
+    propertyDetails,
+    
+    // Refetch functions
+    refetchReservation,
     refetchBids,
     
     // Write functions
-    placeBid,
-    withdrawBid,
-    cedeReservation,
     createReservation,
-    cancelReservation,
+    placeBid,
+    cedeReservation,
+    withdrawBid,
     checkIn,
     checkOut,
+    cancelReservation,
     
     // Transaction state
     isPending,
     isConfirming,
     isConfirmed,
     hash,
-    writeError,
   }
 }
 
+// Helper type for vault state
+export enum VaultState {
+  FREE = 0,
+  AUCTION = 1,
+  SETTLED = 2,
+}
+
+// Helper to format vault state
+export function formatVaultState(state: number): string {
+  switch (state) {
+    case VaultState.FREE:
+      return '🟢 Available'
+    case VaultState.AUCTION:
+      return '🟡 Active Auction'
+    case VaultState.SETTLED:
+      return '🔴 Occupied'
+    default:
+      return 'Unknown'
+  }
+}

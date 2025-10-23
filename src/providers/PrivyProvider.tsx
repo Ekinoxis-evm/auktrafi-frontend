@@ -5,7 +5,7 @@ import { WagmiProvider } from '@privy-io/wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { config } from '@/config/wagmi'
 import { ReactNode, useEffect } from 'react'
-import { arbitrumSepolia } from 'wagmi/chains'
+import { mainnet, arbitrum, sepolia, arbitrumSepolia } from 'wagmi/chains'
 
 const queryClient = new QueryClient()
 
@@ -81,12 +81,13 @@ export function Providers({ children }: { children: ReactNode }) {
         },
         // Enable passkeys for authentication
         mfa: {
-          noPromptOnMfaRequired: false,
+          noPromptOnMfaRequired: true,
         },
         // Default chain for funding operations
         defaultChain: arbitrumSepolia,
-        // Supported chains for funding (enables cross-chain bridging and wallet transfers)
-        supportedChains: [arbitrumSepolia],
+        // All supported chains for funding (enables cross-chain bridging and wallet transfers)
+        // This must match the chains in wagmi config
+        supportedChains: [mainnet, arbitrum, sepolia, arbitrumSepolia],
       }}
     >
       <PrivyDebug />
