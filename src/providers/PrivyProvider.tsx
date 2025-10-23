@@ -71,7 +71,7 @@ export function Providers({ children }: { children: ReactNode }) {
         appearance: {
           theme: 'light',
           accentColor: '#676FFF',
-          logo: 'https://your-logo-url.com/logo.png',
+          logo: 'https://public.ekinoxis.com/logo.png',
           walletChainType: 'ethereum-only',
         },
         embeddedWallets: {
