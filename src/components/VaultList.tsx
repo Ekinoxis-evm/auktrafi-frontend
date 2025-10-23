@@ -1,0 +1,100 @@
+'use client'
+
+import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
+import { Button } from '@/components/ui/Button'
+import { useState } from 'react'
+
+export function VaultList() {
+  const { allVaultIds, refetchVaultIds, useVaultInfo } = useDigitalHouseFactory()
+  const [selectedVault, setSelectedVault] = useState<string | null>(null)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">📋 All Vaults</h2>
+        <Button onClick={() => refetchVaultIds()} size="sm" variant="outline">
+          🔄 Refresh
+        </Button>
+      </div>
+
+      <div className="grid gap-4">
+        {allVaultIds && Array.isArray(allVaultIds) && allVaultIds.length > 0 ? (
+          allVaultIds.map((vaultId: string) => (
+            <VaultCard 
+              key={vaultId} 
+              vaultId={vaultId}
+              isSelected={selectedVault === vaultId}
+              onSelect={() => setSelectedVault(vaultId)}
+            />
+          ))
+        ) : (
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No vaults found</p>
+            <p className="text-sm text-gray-400 mt-2">Create your first vault to get started</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function VaultCard({ 
+  vaultId, 
+  isSelected, 
+  onSelect 
+}: { 
+  vaultId: string
+  isSelected: boolean
+  onSelect: () => void
+}) {
+  const { useVaultInfo } = useDigitalHouseFactory()
+  const { data: vaultInfo, isLoading } = useVaultInfo(vaultId)
+
+  if (isLoading) {
+    return (
+      <div className="p-4 border rounded-lg animate-pulse bg-gray-50">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    )
+  }
+
+  if (!vaultInfo) return null
+
+  const [vaultAddress, id, propertyDetails, basePrice, createdAt, isActive] = vaultInfo as any[]
+
+  return (
+    <div 
+      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+        isSelected ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-400'
+      }`}
+      onClick={onSelect}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="font-semibold text-lg">🏠 {id}</h3>
+          <p className="text-sm text-gray-600 mt-1">{propertyDetails}</p>
+          <div className="mt-3 space-y-1 text-sm">
+            <p className="text-gray-700">
+              💰 Base Price: <span className="font-mono">{basePrice?.toString()} PYUSD</span>
+            </p>
+            <p className="text-gray-500 font-mono text-xs">
+              📍 {vaultAddress?.slice(0, 6)}...{vaultAddress?.slice(-4)}
+            </p>
+            <p className="text-xs text-gray-400">
+              Created: {new Date(Number(createdAt) * 1000).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+        <div>
+          <span className={`px-2 py-1 rounded text-xs font-medium ${
+            isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          }`}>
+            {isActive ? '✅ Active' : '⏸️ Inactive'}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
