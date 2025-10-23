@@ -11,20 +11,54 @@ export function useReservation(vaultAddress: Address) {
     functionName: 'getCurrentReservation',
   })
 
-  const reservation = currentReservation as any
+  // Parse reservation data safely
+  // getCurrentReservation returns a tuple: [booker, stakeAmount, shares, checkInDate, checkOutDate, nonce, isActive]
+  let parsedReservation = null
+  let booker: Address | undefined
+  let stakeAmount: bigint | undefined
+  let shares: bigint | undefined
+  let checkInDate: bigint | undefined
+  let checkOutDate: bigint | undefined
+  let nonce: bigint | undefined
+  let isActive = false
 
-  const hasActiveReservation = reservation && reservation[6] === true
+  if (currentReservation) {
+    // Check if it's an array or object
+    if (Array.isArray(currentReservation)) {
+      parsedReservation = currentReservation
+      booker = currentReservation[0] as Address
+      stakeAmount = currentReservation[1] as bigint
+      shares = currentReservation[2] as bigint
+      checkInDate = currentReservation[3] as bigint
+      checkOutDate = currentReservation[4] as bigint
+      nonce = currentReservation[5] as bigint
+      isActive = currentReservation[6] as boolean
+    } else if (typeof currentReservation === 'object') {
+      // Handle object format (some wagmi versions return objects)
+      const res = currentReservation as Record<string | number, unknown>
+      parsedReservation = res
+      booker = (res.booker || res[0]) as Address
+      stakeAmount = (res.stakeAmount || res[1]) as bigint
+      shares = (res.shares || res[2]) as bigint
+      checkInDate = (res.checkInDate || res[3]) as bigint
+      checkOutDate = (res.checkOutDate || res[4]) as bigint
+      nonce = (res.nonce || res[5]) as bigint
+      isActive = (res.isActive ?? res[6] ?? false) as boolean
+    }
+  }
+
+  const hasActiveReservation = isActive === true
 
   return {
-    reservation,
+    reservation: parsedReservation,
     hasActiveReservation,
-    booker: reservation?.[0] as Address,
-    stakeAmount: reservation?.[1] as bigint,
-    shares: reservation?.[2] as bigint,
-    checkInDate: reservation?.[3] as bigint,
-    checkOutDate: reservation?.[4] as bigint,
-    nonce: reservation?.[5] as bigint,
-    isActive: reservation?.[6] as boolean,
+    booker,
+    stakeAmount,
+    shares,
+    checkInDate,
+    checkOutDate,
+    nonce,
+    isActive,
     isLoading,
     refetch,
   }

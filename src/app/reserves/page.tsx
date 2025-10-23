@@ -128,24 +128,61 @@ function useUserVaultParticipation(vaultAddress: `0x${string}`, userAddress?: `0
 
   if (!userAddress) return { isParticipating: false }
 
-  // Check if user is the booker
-  const hasReservation = currentReservation && 
-    Array.isArray(currentReservation) &&
-    typeof currentReservation[0] === 'string' &&
-    currentReservation[0].toLowerCase() === userAddress.toLowerCase() &&
-    currentReservation[6] === true // isActive
+  // Parse currentReservation with robust checks
+  let bookerAddress: string | undefined
+  let isActive = false
 
-  // Check if user has active bids
-  const hasBids = auctionBids &&
-    Array.isArray(auctionBids) &&
-    auctionBids.some((bid: any) => {
-      return Array.isArray(bid) && 
-        typeof bid[0] === 'string' &&
-        bid[0].toLowerCase() === userAddress.toLowerCase() &&
-        bid[3] === true // isActive
+  if (currentReservation) {
+    if (Array.isArray(currentReservation)) {
+      bookerAddress = currentReservation[0] as string
+      isActive = currentReservation[6] as boolean
+    } else if (typeof currentReservation === 'object') {
+      const res = currentReservation as Record<string | number, unknown>
+      bookerAddress = (res.booker || res[0]) as string
+      isActive = (res.isActive ?? res[6] ?? false) as boolean
+    }
+  }
+
+  // Check if user is the booker
+  const hasReservation = bookerAddress && 
+    typeof bookerAddress === 'string' &&
+    bookerAddress.toLowerCase() === userAddress.toLowerCase() &&
+    isActive === true
+
+  // Check if user has active bids - also handle both array and object formats
+  let hasBids = false
+  if (auctionBids && Array.isArray(auctionBids)) {
+    hasBids = auctionBids.some((bid: unknown) => {
+      if (Array.isArray(bid)) {
+        const bidderAddress = bid[0] as string
+        const bidIsActive = bid[3] as boolean
+        return typeof bidderAddress === 'string' &&
+          bidderAddress.toLowerCase() === userAddress.toLowerCase() &&
+          bidIsActive === true
+      } else if (typeof bid === 'object' && bid !== null) {
+        const bidObj = bid as Record<string | number, unknown>
+        const bidderAddress = (bidObj.bidder || bidObj[0]) as string
+        const bidIsActive = (bidObj.isActive ?? bidObj[3] ?? false) as boolean
+        return typeof bidderAddress === 'string' &&
+          bidderAddress.toLowerCase() === userAddress.toLowerCase() &&
+          bidIsActive === true
+      }
+      return false
     })
+  }
 
   const isParticipating = Boolean(hasReservation || hasBids)
+
+  // Debug log
+  console.log('useUserVaultParticipation:', {
+    vaultAddress,
+    userAddress,
+    bookerAddress,
+    isActive,
+    hasReservation,
+    hasBids,
+    isParticipating
+  })
 
   return { isParticipating }
 }

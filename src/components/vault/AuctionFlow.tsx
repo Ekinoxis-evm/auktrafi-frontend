@@ -23,7 +23,7 @@ enum BidStep {
 
 export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const { address: userAddress } = useAccount()
-  const { reservation, booker, stakeAmount, checkInDate, checkOutDate, refetch: refetchReservation } = useReservation(vaultAddress)
+  const { reservation, booker, stakeAmount, checkInDate, checkOutDate, isLoading: isLoadingReservation, refetch: refetchReservation } = useReservation(vaultAddress)
   const { bids, activeBids, highestBid, refetch: refetchBids } = useAuction(vaultAddress)
   const { placeBid, cedeReservation, checkIn, checkOut, cancelReservation, withdrawBid, isPending, isConfirming, isConfirmed, hash } = useVaultActions(vaultAddress)
   
@@ -40,6 +40,7 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const [bidAmount, setBidAmount] = useState('')
   const [bidStep, setBidStep] = useState<BidStep>(BidStep.INPUT)
   const [bidError, setBidError] = useState<string | null>(null)
+  const [currentTime] = useState(() => Date.now())
 
   const isUserBooker = booker && typeof booker === 'string' && userAddress 
     ? booker.toLowerCase() === userAddress.toLowerCase() 
@@ -52,7 +53,7 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const checkOutTimestamp = checkOutDate && typeof checkOutDate === 'bigint'
     ? Number(checkOutDate) * 1000 
     : 0
-  const now = Date.now()
+  const now = currentTime
   
   // Format dates for display
   const formatDate = (timestamp: number) => {
@@ -210,6 +211,16 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
     }
   }
 
+  // Debug: Log reservation data
+  console.log('AuctionFlow - Reservation Data:', {
+    reservation,
+    booker,
+    stakeAmount: stakeAmount?.toString(),
+    checkInDate: checkInDate?.toString(),
+    checkOutDate: checkOutDate?.toString(),
+    isLoadingReservation
+  })
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Current Reservation Card */}
@@ -224,68 +235,83 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1 font-medium">👤 Booker (First Reserver)</p>
-            <p className="font-mono text-sm font-semibold text-gray-900 break-all">
-              {booker && typeof booker === 'string' ? `${booker.slice(0, 10)}...${booker.slice(-8)}` : 'N/A'}
-            </p>
-            {isUserBooker && (
-              <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-semibold">
-                ✓ You are the booker
-              </span>
-            )}
+        {isLoadingReservation ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">⏳</div>
+            <p className="text-gray-600">Loading reservation details...</p>
           </div>
-          <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1 font-medium">💰 Total PYUSD Staked</p>
-            <p className="text-lg font-bold text-gray-900">
-              {stakeAmount && typeof stakeAmount === 'bigint' ? formatUnits(stakeAmount, 6) : '0'} PYUSD
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Initial reservation stake
-            </p>
+        ) : !booker || !stakeAmount ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">⚠️</div>
+            <p className="text-gray-600">No active reservation data found</p>
+            <p className="text-xs text-gray-500 mt-2">The vault may not have a reservation yet</p>
           </div>
-          <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1 font-medium">📅 Check-in Date</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {formatDate(checkInTimestamp)}
-            </p>
-            {checkInTimestamp > 0 && (
-              <p className="text-xs text-gray-500 mt-1">
-                {checkInTimestamp > now ? `In ${Math.ceil((checkInTimestamp - now) / (1000 * 60 * 60 * 24))} days` : 'Available now'}
-              </p>
-            )}
-          </div>
-          <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1 font-medium">📅 Check-out Date</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {formatDate(checkOutTimestamp)}
-            </p>
-            {checkOutTimestamp > 0 && checkInTimestamp > 0 && (
-              <p className="text-xs text-gray-500 mt-1">
-                Duration: {Math.ceil((checkOutTimestamp - checkInTimestamp) / (1000 * 60 * 60 * 24))} days
-              </p>
-            )}
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="bg-white/50 rounded-xl p-4">
+                <p className="text-xs text-gray-600 mb-1 font-medium">👤 Booker (First Reserver)</p>
+                <p className="font-mono text-sm font-semibold text-gray-900 break-all">
+                  {booker && typeof booker === 'string' ? `${booker.slice(0, 10)}...${booker.slice(-8)}` : 'N/A'}
+                </p>
+                {isUserBooker && (
+                  <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-semibold">
+                    ✓ You are the booker
+                  </span>
+                )}
+              </div>
+              <div className="bg-white/50 rounded-xl p-4">
+                <p className="text-xs text-gray-600 mb-1 font-medium">💰 Total PYUSD Staked</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {stakeAmount && typeof stakeAmount === 'bigint' ? formatUnits(stakeAmount, 6) : '0'} PYUSD
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Initial reservation stake
+                </p>
+              </div>
+              <div className="bg-white/50 rounded-xl p-4">
+                <p className="text-xs text-gray-600 mb-1 font-medium">📅 Check-in Date</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatDate(checkInTimestamp)}
+                </p>
+                {checkInTimestamp > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {checkInTimestamp > now ? `In ${Math.ceil((checkInTimestamp - now) / (1000 * 60 * 60 * 24))} days` : 'Available now'}
+                  </p>
+                )}
+              </div>
+              <div className="bg-white/50 rounded-xl p-4">
+                <p className="text-xs text-gray-600 mb-1 font-medium">📅 Check-out Date</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatDate(checkOutTimestamp)}
+                </p>
+                {checkOutTimestamp > 0 && checkInTimestamp > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Duration: {Math.ceil((checkOutTimestamp - checkInTimestamp) / (1000 * 60 * 60 * 24))} days
+                  </p>
+                )}
+              </div>
+            </div>
 
-        {/* Booker Actions */}
-        {isUserBooker && (
-          <div className="flex flex-wrap gap-2">
-            {canCheckIn && (
-              <Button onClick={handleCheckIn} disabled={isPending} className="bg-green-600 hover:bg-green-700">
-                ✅ Check In
-              </Button>
+            {/* Booker Actions - Only show if user is the booker */}
+            {isUserBooker && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {canCheckIn && (
+                  <Button onClick={handleCheckIn} disabled={isPending} className="bg-green-600 hover:bg-green-700">
+                    ✅ Check In
+                  </Button>
+                )}
+                {canCheckOut && (
+                  <Button onClick={handleCheckOut} disabled={isPending} className="bg-blue-600 hover:bg-blue-700">
+                    🚪 Check Out
+                  </Button>
+                )}
+                <Button onClick={handleCancel} disabled={isPending} variant="outline" className="text-red-600 border-red-600">
+                  ❌ Cancel Reservation
+                </Button>
+              </div>
             )}
-            {canCheckOut && (
-              <Button onClick={handleCheckOut} disabled={isPending} className="bg-blue-600 hover:bg-blue-700">
-                🚪 Check Out
-              </Button>
-            )}
-            <Button onClick={handleCancel} disabled={isPending} variant="outline" className="text-red-600 border-red-600">
-              ❌ Cancel Reservation
-            </Button>
-          </div>
+          </>
         )}
       </div>
 
@@ -311,16 +337,16 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
                 type="number"
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
-                placeholder={stakeAmount ? `Higher than ${formatUnits(stakeAmount, 6)}` : 'Enter amount'}
+                placeholder={stakeAmount && typeof stakeAmount === 'bigint' ? `Higher than ${formatUnits(stakeAmount, 6)}` : 'Enter amount'}
                 step="0.01"
-                min={stakeAmount ? Number(formatUnits(stakeAmount, 6)) + 0.01 : 0}
+                min={stakeAmount && typeof stakeAmount === 'bigint' ? Number(formatUnits(stakeAmount, 6)) + 0.01 : 0}
                 className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
                 disabled={bidStep !== BidStep.INPUT}
               />
-              {highestBid && (
+              {highestBid && highestBid?.amount && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Highest bid: {formatUnits(highestBid.amount, 6)} PYUSD
+                  Highest bid: {formatUnits(highestBid?.amount, 6)} PYUSD
                 </p>
               )}
             </div>

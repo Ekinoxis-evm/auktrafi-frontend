@@ -1,274 +1,805 @@
-# 🏠 Auktrafi - Decentralized Auction Platform
-
-> Decentralized Auction, Booking, and Distribution Platform for Property Vaults
-
-[![Next.js](https://img.shields.io/badge/Next.js-16.0.0-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC)](https://tailwindcss.com/)
-[![Privy](https://img.shields.io/badge/Privy-Auth-purple)](https://privy.io/)
-
-## 📋 Overview
-
-Auktrafi is a comprehensive blockchain-based platform for managing and participating in property auctions. Built with modern web technologies and blockchain integration, it provides a seamless experience for both property owners and auction participants.
-
-## 🚨 Quick Troubleshooting
-
-**Wallet not connecting after deployment?**
-→ See **[Cache Troubleshooting Guide](./docs/setup/CLEAR_CACHE.md)**
-
-**Need to configure Privy domains?**
-→ See **[Privy Domain Config](./docs/setup/PRIVY_DOMAIN_CONFIG.md)**
-
-## ✨ Features
-
-### 🏗️ **Admin Panel** (`/admin`)
-- **Create Property Vaults**: Simple form to tokenize real estate
-- **Manage Auctions**: Monitor and control your property listings
-- **Multi-Token Balance**: View ETH, ARB, PYUSD, and USD balances
-- **Network Switching**: Seamlessly switch between Ethereum and Arbitrum
-- **Funding Integration**: Add funds via wallet transfers or bridging
-
-### 🏪 **Marketplace** (`/marketplace`)
-- **Browse Auctions**: Optimized read operations with React Query
-- **Advanced Filtering**: Filter by price, status, and more
-- **Staking System**: Participate in auctions by placing stakes
-- **Real-time Updates**: Auto-refresh every 30 seconds
-- **Cross-chain Support**: Interact across Ethereum and Arbitrum
-
-### 💰 **Balance Management**
-- **Multi-Token Display**: ETH, ARB, PYUSD with USD valuations
-- **Network Switching**: One-click network changes
-- **Funding Options**:
-  - Transfer from external wallets (MetaMask, Coinbase, etc.)
-  - Cross-chain bridging (automatic detection)
-  - Manual address copy
-
-### 🔐 **Authentication**
-- **Privy Integration**: Passwordless authentication
-- **Passkey Support**: Modern, secure login
-- **Embedded Wallets**: Automatic wallet creation
-- **Multi-Wallet**: Support for external wallet connections
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- A Privy App ID ([Get one here](https://dashboard.privy.io))
-- Alchemy API key (optional, for custom RPCs)
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Ekinoxis-evm/auktrafi-frontend.git
-cd auktrafi-frontend
-
-# Install dependencies
-npm install
-
-# Copy environment variables
-cp env.example .env.local
-
-# Edit .env.local with your credentials
-nano .env.local
-
-# Run development server
-npm run dev
-```
-
-Visit `http://localhost:3000` to see the app.
-
-### Build for Production
-
-```bash
-# Build the application
-npm run build
-
-# Start production server
-npm start
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env.local` file in the root directory:
-
-```env
-# Privy Configuration (Required)
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
-
-# Optional: Custom RPC URLs
-NEXT_PUBLIC_MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/your-api-key
-NEXT_PUBLIC_ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/your-api-key
-NEXT_PUBLIC_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
-NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/your-api-key
-```
-
-### Privy Setup
-
-1. Go to [Privy Dashboard](https://dashboard.privy.io)
-2. Create a new app
-3. Copy your App ID
-4. Configure login methods (Email, Wallet, Google, Passkey)
-5. Set up funding methods (Wallet transfers enabled by default)
-
-## 📁 Project Structure
-
-```
-auktrafi-frontend/
-├── src/
-│   ├── app/                      # Next.js app router
-│   │   ├── page.tsx             # Landing page
-│   │   ├── admin/               # Admin dashboard
-│   │   └── marketplace/         # Public marketplace
-│   ├── components/              # React components
-│   │   ├── ui/                  # Reusable UI components
-│   │   ├── BalanceCard.tsx      # Multi-token balance display
-│   │   ├── CreateVault.tsx      # Vault creation form
-│   │   ├── MarketplaceList.tsx  # Auction listings
-│   │   └── ...
-│   ├── hooks/                   # Custom React hooks
-│   │   └── useDigitalHouseFactory.ts
-│   ├── config/                  # Configuration
-│   │   └── wagmi.ts            # Blockchain config
-│   ├── contracts/              # Contract ABIs
-│   │   └── DigitalHouseFactory.json
-│   └── providers/              # React context providers
-│       └── PrivyProvider.tsx
-├── public/                     # Static assets
-├── docs/                       # 📚 Documentation
-│   ├── ARCHITECTURE.md        # System architecture
-│   ├── BALANCE_MODULE.md      # Balance module
-│   ├── VAULT_MANAGEMENT.md    # Vault management
-│   ├── IMPLEMENTATION_SUMMARY.md # Implementation details
-│   └── setup/                 # Setup guides
-│       ├── VERCEL_SETUP.md
-│       ├── PRIVY_DOMAIN_CONFIG.md
-│       ├── PRIVY_APP_CLIENT_SETUP.md
-│       └── CLEAR_CACHE.md
-└── README.md                   # 👈 You are here
-```
-
-## 🛠️ Technology Stack
-
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Authentication**: [Privy](https://privy.io/)
-- **Blockchain**: 
-  - [Wagmi](https://wagmi.sh/) - React Hooks for Ethereum
-  - [Viem](https://viem.sh/) - TypeScript Interface for Ethereum
-- **State Management**: [TanStack Query](https://tanstack.com/query) (React Query)
-- **Networks**: Ethereum, Arbitrum (+ Testnets)
-
-## 🎯 Key Features Explained
-
-### Balance Card
-
-The BalanceCard component provides a comprehensive view of user funds:
-
-```typescript
-- ETH/ARB Balance: Native token with live USD price
-- PYUSD Balance: Stablecoin with $1.00 peg
-- Total USD: Sum of all holdings
-- Network Switcher: Ethereum ↔ Arbitrum
-- Quick Actions: Fund wallet, copy address
-```
-
-### Network Switching
-
-Users can seamlessly switch between:
-- **Ethereum Mainnet** / Sepolia (testnet)
-- **Arbitrum** / Arbitrum Sepolia (testnet)
-
-Benefits:
-- Lower gas fees on Arbitrum
-- Faster transaction confirmations
-- Same functionality across both networks
-
-### Funding Options
-
-Powered by Privy, users can fund their wallets via:
-
-1. **Wallet Transfers**: Connect MetaMask, Coinbase Wallet, etc.
-2. **Cross-Chain Bridging**: Automatic detection and bridging
-3. **Manual Transfer**: Copy address and send manually
-
-## 📚 Documentation
-
-### 📖 Core Documentation
-- **[Architecture Overview](./docs/ARCHITECTURE.md)**: Complete system architecture
-- **[Balance Module](./docs/BALANCE_MODULE.md)**: Multi-token balance management
-- **[Vault Management](./docs/VAULT_MANAGEMENT.md)**: Vault creation and bidding
-- **[Implementation Summary](./docs/IMPLEMENTATION_SUMMARY.md)**: Technical implementation details
-
-### ⚙️ Setup & Configuration
-- **[Vercel Deployment](./docs/setup/VERCEL_SETUP.md)**: Deploy to Vercel
-- **[Privy Domain Config](./docs/setup/PRIVY_DOMAIN_CONFIG.md)**: Configure Privy domains
-- **[Privy App Client Setup](./docs/setup/PRIVY_APP_CLIENT_SETUP.md)**: Privy authentication setup
-- **[Cache Troubleshooting](./docs/setup/CLEAR_CACHE.md)**: Fix Privy connection issues
-
-## 🔐 Security
-
-- ✅ Privy authentication with Passkey support
-- ✅ Wallet signature required for transactions
-- ✅ Client-side and contract-level validation
-- ✅ Secure RPC connections
-- ✅ No private key exposure
-
-## 🚧 Roadmap
-
-### Short Term
-- [ ] Complete vault details display in marketplace
-- [ ] Implement actual staking transactions
-- [ ] Add real-time price feeds (CoinGecko/Chainlink)
-- [ ] Enhanced filtering and search
-
-### Medium Term
-- [ ] Multi-token support (USDC, USDT, DAI)
-- [ ] Historical balance charts
-- [ ] Notification system
-- [ ] Mobile app (React Native)
-
-### Long Term
-- [ ] DAO governance
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
-- [ ] Social features
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Privy](https://privy.io/) for authentication infrastructure
-- [OpenZeppelin](https://openzeppelin.com/) for smart contract standards
-- [Wagmi](https://wagmi.sh/) for React hooks
-- [Next.js](https://nextjs.org/) team for the amazing framework
-
-## 📞 Support
-
-- **Documentation**: Check our docs folder
-- **Issues**: [GitHub Issues](https://github.com/Ekinoxis-evm/auktrafi-frontend/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Ekinoxis-evm/auktrafi-frontend/discussions)
-
-## 🌟 Show Your Support
-
-Give a ⭐️ if this project helped you!
+# 🏠 Auktrafi - Digital House Frontend
+
+Plataforma descentralizada para gestionar propiedades tokenizadas con sistema de reservas y subastas en blockchain.
+
+## 📋 Tabla de Contenidos
+
+- [Descripción General](#descripción-general)
+- [Tecnologías](#tecnologías)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Páginas](#páginas)
+- [Componentes](#componentes)
+- [Hooks Personalizados](#hooks-personalizados)
+- [Configuración](#configuración)
+- [Instalación](#instalación)
+- [Desarrollo](#desarrollo)
+- [Despliegue](#despliegue)
 
 ---
 
-Built with ❤️ by the Auktrafi Team
+## 🎯 Descripción General
+
+Auktrafi es una aplicación Web3 que permite a los usuarios:
+
+- **Crear vaults** de propiedades tokenizadas
+- **Realizar reservas** con staking de PYUSD
+- **Participar en subastas** para obtener reservas
+- **Gestionar sus propiedades** y reservas activas
+- **Conectar wallets** con autenticación segura vía Privy
+
+### Flujo de Usuario
+
+1. **Propietarios**: Crean vaults con precio base y detalles de la propiedad
+2. **Reservantes**: Hacen stake de PYUSD para reservar una propiedad
+3. **Subastadores**: Compiten con bids más altos para obtener la reserva
+4. **Check-in/Check-out**: Sistema automatizado de entrada y salida
+
+---
+
+## 🛠 Tecnologías
+
+### Core
+- **Next.js 16** (App Router) - Framework React
+- **TypeScript** - Tipado estático
+- **Tailwind CSS** - Estilos
+
+### Web3
+- **Wagmi** - React Hooks para Ethereum
+- **Viem** - Cliente Ethereum TypeScript
+- **Privy** - Autenticación y gestión de wallets
+- **OnchainKit** (configurado) - SDK de Coinbase para dApps
+
+### Blockchain
+- **Ethereum Mainnet**
+- **Arbitrum**
+- **Sepolia Testnet**
+- **Arbitrum Sepolia Testnet**
+
+### Tokens
+- **PYUSD** (PayPal USD) - Token principal para reservas y bids
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+digitalhouse-frontend/
+├── src/
+│   ├── app/                      # Rutas de Next.js App Router
+│   │   ├── layout.tsx           # Layout raíz
+│   │   ├── page.tsx             # Landing page
+│   │   ├── marketplace/         # Marketplace de vaults
+│   │   │   ├── page.tsx        # Lista de vaults (MarketplacePage)
+│   │   │   └── [vaultId]/      # Detalle de vault
+│   │   │       └── page.tsx    # VaultDetailPage
+│   │   ├── ownerships/          # Propiedades del usuario
+│   │   │   └── page.tsx        # OwnershipsPage
+│   │   ├── reserves/            # Reservas del usuario
+│   │   │   └── page.tsx        # ReservesPage
+│   │   └── profile/             # Perfil de usuario
+│   │       └── page.tsx        # ProfilePage
+│   │
+│   ├── components/              # Componentes React
+│   │   ├── ui/                  # Componentes UI básicos
+│   │   │   └── Button.tsx
+│   │   ├── vault/               # Componentes de vaults
+│   │   │   ├── VaultCard.tsx
+│   │   │   ├── ReservationFlow.tsx
+│   │   │   └── AuctionFlow.tsx
+│   │   ├── Layout.tsx           # Layout con navbar/footer
+│   │   ├── WalletConnect.tsx    # Botón de conexión de wallet
+│   │   ├── NetworkSwitcher.tsx  # Selector de red
+│   │   ├── CreateVault.tsx      # Formulario crear vault
+│   │   ├── BalanceCard.tsx      # Tarjeta de balances
+│   │   └── FundWallet.tsx       # Opciones de fondeo
+│   │
+│   ├── hooks/                   # Hooks personalizados
+│   │   ├── useDigitalHouseFactory.ts
+│   │   ├── useDigitalHouseVault.ts
+│   │   ├── useVaultInfo.ts
+│   │   ├── useVaultActions.ts
+│   │   ├── useReservation.ts
+│   │   ├── useAuction.ts
+│   │   └── usePYUSDApproval.ts
+│   │
+│   ├── config/                  # Configuración
+│   │   └── wagmi.ts            # Configuración de Wagmi
+│   │
+│   ├── contracts/               # ABIs de contratos
+│   │   ├── DigitalHouseFactory.json
+│   │   └── DigitalHouseVault.json
+│   │
+│   ├── providers/               # Providers de React
+│   │   └── PrivyProvider.tsx   # Configuración de Privy
+│   │
+│   └── lib/                     # Utilidades
+│       └── utils.ts
+│
+├── public/                      # Archivos estáticos
+├── .env.local                   # Variables de entorno (no versionado)
+├── env.example                  # Ejemplo de variables de entorno
+└── package.json
+```
+
+---
+
+## 📄 Páginas
+
+### 🏠 Landing Page (`/`)
+**Componente**: `page.tsx`
+
+Página de inicio con navegación a las secciones principales:
+- Links a Marketplace
+- Links a Ownerships (si está conectado)
+- Botón de conexión de wallet
+
+### 🏆 Marketplace (`/marketplace`)
+**Componente**: `MarketplacePage`
+
+**Características**:
+- Lista todos los vaults disponibles
+- Filtros por estado: FREE, AUCTION, OCCUPIED
+- Botón de refresh para actualizar datos
+- Cards con información resumida de cada vault
+
+**Datos mostrados**:
+- ID del vault
+- Detalles de la propiedad
+- Estado actual (FREE/AUCTION/OCCUPIED)
+- Precio base en PYUSD
+
+### 📋 Detalle de Vault (`/marketplace/[vaultId]`)
+**Componente**: `VaultDetailPage`
+
+**Información del Vault**:
+- ID y dirección del vault
+- Detalles completos de la propiedad
+- Estado actual con indicador visual
+- Precio base
+- Dirección del propietario
+
+**Flujos según estado**:
+
+1. **Estado FREE** (Disponible):
+   - Muestra `ReservationFlow`
+   - Permite crear primera reserva
+   - Requiere stake >= precio base
+
+2. **Estado AUCTION** (En subasta):
+   - Muestra `AuctionFlow`
+   - Tarjeta "Active Auction" con:
+     - Booker (primer reservante)
+     - Total PYUSD staked
+     - Fechas de check-in/check-out
+     - Duración de la estancia
+   - Formulario para colocar bids
+   - Lista de bids activos
+   - Acciones del booker (si es el usuario):
+     - Check-in
+     - Check-out
+     - Cancelar reserva
+     - Ceder reserva (24h antes del check-in)
+   - Acciones de bidders:
+     - Retirar bid
+
+3. **Estado OCCUPIED** (Ocupado):
+   - Mensaje de propiedad ocupada
+   - No permite acciones
+
+### 🏗️ My Properties (`/ownerships`)
+**Componente**: `OwnershipsPage`
+
+**Características**:
+- Muestra solo vaults creados por el usuario conectado
+- Formulario para crear nuevos vaults
+- Lista de propiedades propias con opción de gestión
+
+**Datos requeridos para crear vault**:
+- ID único del vault
+- Detalles de la propiedad
+- Precio base (PYUSD)
+- Dirección de la propiedad (real estate)
+
+**Filtrado**:
+- Solo muestra vaults donde `owner === address` del usuario
+
+### 📋 My Reservations (`/reserves`)
+**Componente**: `ReservesPage`
+
+**Características**:
+- Muestra vaults donde el usuario está participando
+- Incluye reservas activas y bids activos
+
+**Criterios de filtrado**:
+```typescript
+Usuario aparece si:
+- Es el booker (primer reservante) con reserva activa
+- Tiene bids activos en el vault
+```
+
+**Componentes especiales**:
+- `useUserVaultParticipation`: Hook que verifica participación
+- Maneja tanto formato array como object de contratos
+- Debug logs para troubleshooting
+
+### 👤 Profile (`/profile`)
+**Componente**: `ProfilePage`
+
+**Información del Usuario**:
+- Email de autenticación
+- Dirección de wallet
+- Tipo de wallet (Privy embedded, MetaMask, etc.)
+- Fecha de registro
+- ID de usuario de Privy
+
+**Funcionalidades**:
+- Ver balances por red:
+  - ETH/ARB nativo
+  - PYUSD
+  - Valor en USD
+- Fondear wallet (transfer, bridging, copy address)
+- Exportar wallet privada (solo embedded wallets)
+- Logout
+
+**Selector de Red**:
+- Cambiar entre Mainnet, Arbitrum, Sepolia, Arbitrum Sepolia
+- Balances se actualizan automáticamente
+
+---
+
+## 🧩 Componentes
+
+### 🎨 Componentes de UI
+
+#### `Button.tsx`
+Botón reutilizable con variantes y tamaños.
+
+**Props**:
+```typescript
+{
+  variant?: 'default' | 'outline' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  children: ReactNode
+  disabled?: boolean
+  onClick?: () => void
+}
+```
+
+### 🏦 Componentes de Vault
+
+#### `VaultCard.tsx`
+Tarjeta que muestra información resumida de un vault.
+
+**Props**:
+```typescript
+{
+  vaultAddress: Address
+  vaultId: string
+  showManageButton?: boolean
+}
+```
+
+**Información mostrada**:
+- ID del vault
+- Detalles de la propiedad
+- Estado actual con color
+- Precio base
+- Dirección del propietario
+- Link al detalle
+
+#### `ReservationFlow.tsx`
+Flujo completo para crear una reserva.
+
+**Características**:
+- Multi-step process:
+  1. INPUT - Formulario de datos
+  2. APPROVING - Aprobación de PYUSD
+  3. CREATING - Creación de reserva
+  4. SUCCESS - Confirmación
+
+**Validaciones**:
+- Balance suficiente de PYUSD
+- Stake amount >= base price
+- Fechas válidas (check-in < check-out)
+- Aprobación de PYUSD si es necesario
+
+**Props**:
+```typescript
+{
+  vaultAddress: Address
+  basePrice: bigint
+  onSuccess?: () => void
+}
+```
+
+#### `AuctionFlow.tsx`
+Flujo para subastas y gestión de reservas activas.
+
+**Características**:
+- Tarjeta "Active Auction" con datos del booker
+- Formulario para colocar bids (multi-step con aprobación)
+- Lista de bids activos
+- Acciones del booker
+- Acciones de bidders
+
+**Estados de Bid**:
+1. INPUT - Ingresar monto
+2. APPROVING - Aprobar PYUSD
+3. BIDDING - Colocar bid
+4. SUCCESS - Confirmación
+
+**Props**:
+```typescript
+{
+  vaultAddress: Address
+  onSuccess?: () => void
+}
+```
+
+### 🔗 Componentes de Conexión
+
+#### `WalletConnect.tsx`
+Botón simple de conexión/desconexión de wallet.
+
+**Funcionalidad**:
+- Conectar: Abre modal de Privy
+- Desconectar: Logout y desconecta wallet
+
+#### `NetworkSwitcher.tsx`
+Selector de red blockchain.
+
+**Redes soportadas**:
+- Ethereum Mainnet (1)
+- Arbitrum (42161)
+- Sepolia Testnet (11155111)
+- Arbitrum Sepolia (421614)
+
+**Visual**:
+- Dropdown con nombre y chain ID
+- Indicador de red actual
+- Switching instantáneo
+
+### 💰 Componentes Financieros
+
+#### `BalanceCard.tsx`
+Tarjeta que muestra balances del usuario.
+
+**Tokens mostrados**:
+- Nativo (ETH en Mainnet/Sepolia, ARB en Arbitrum)
+- PYUSD (ERC20)
+- Conversión a USD (aproximada)
+
+**Features**:
+- Auto-refresh al cambiar de red
+- Loading states
+- Formato de números con decimales
+
+#### `FundWallet.tsx`
+Opciones para fondear la wallet.
+
+**Métodos disponibles** (vía Privy):
+- Transfer desde otra wallet
+- Bridging entre cadenas
+- Copy address para recibir fondos
+
+### 🏭 Componentes de Creación
+
+#### `CreateVault.tsx`
+Formulario para crear nuevos vaults.
+
+**Campos**:
+- Vault ID (único)
+- Property Details (descripción)
+- Base Price (PYUSD, con 6 decimales)
+- Real Estate Address (dirección física)
+
+**Validaciones**:
+- Todos los campos requeridos
+- Base price > 0
+- ID único (no duplicado)
+
+**Proceso**:
+1. Validar inputs
+2. Llamar a `createVault` en el factory
+3. Esperar confirmación
+4. Refresh automático de la lista
+
+### 📐 Componentes de Layout
+
+#### `Layout.tsx`
+Layout unificado con navbar y footer.
+
+**Estructura**:
+```
+┌─────────────────────────────┐
+│         HEADER              │
+│  Logo | Nav | Network | Wallet │
+├─────────────────────────────┤
+│                             │
+│         CONTENT             │
+│        (children)           │
+│                             │
+├─────────────────────────────┤
+│         FOOTER              │
+│    Links | Copyright        │
+└─────────────────────────────┘
+```
+
+**Navigation**:
+- My Properties
+- My Reservations
+- Marketplace
+- Profile
+
+**Header Derecha**:
+- NetworkSwitcher (si conectado)
+- WalletConnect
+
+---
+
+## 🪝 Hooks Personalizados
+
+### `useDigitalHouseFactory.ts`
+Interactúa con el contrato Factory.
+
+**Funciones read**:
+- `allVaultIds` - Lista todos los IDs de vaults
+- `useVaultAddress(vaultId)` - Obtiene dirección de un vault
+- `useVaultInfo(vaultId)` - Info completa del vault
+- `useOwnerVaults(owner)` - Vaults de un propietario
+
+**Funciones write**:
+- `createVault(vaultId, details, basePrice, realEstateAddress)` - Crear vault
+
+### `useDigitalHouseVault.ts`
+Interactúa con contratos de Vault individuales.
+
+**Funciones read**:
+- `getAuctionBids` - Lista de bids
+- `basePrice` - Precio base
+- `vaultInfo` - Información del vault
+- `currentState` - Estado actual (FREE/AUCTION/OCCUPIED)
+- `getCurrentReservation` - Reserva activa
+- `propertyDetails` - Detalles de la propiedad
+
+**Funciones write**:
+- `placeBid(amount)` - Colocar bid
+- `withdrawBid(bidIndex)` - Retirar bid
+- `cedeReservation(bidIndex)` - Ceder a un bidder
+- `createReservation(stake, checkIn, checkOut)` - Crear reserva
+- `cancelReservation()` - Cancelar reserva
+- `checkIn()` - Hacer check-in
+- `checkOut()` - Hacer check-out
+
+### `useVaultInfo.ts`
+Hook simplificado para obtener info de un vault.
+
+**Returns**:
+```typescript
+{
+  vaultId: string
+  propertyDetails: string
+  basePrice: bigint
+  owner: Address
+  currentState: VaultState
+  isLoading: boolean
+}
+```
+
+**Helper functions**:
+- `getVaultStateLabel(state)` - Texto del estado
+- `getVaultStateColor(state)` - Color para UI
+- `getVaultStateIcon(state)` - Emoji del estado
+
+### `useVaultActions.ts`
+Hook consolidado para acciones de vault.
+
+**Returns**:
+```typescript
+{
+  createReservation(stake, checkIn, checkOut): Promise<void>
+  placeBid(amount): Promise<void>
+  cedeReservation(bidIndex): Promise<void>
+  withdrawBid(bidIndex): Promise<void>
+  checkIn(): Promise<void>
+  checkOut(): Promise<void>
+  cancelReservation(): Promise<void>
+  isPending: boolean
+  isConfirming: boolean
+  isConfirmed: boolean
+  hash?: Hash
+}
+```
+
+### `useReservation.ts`
+Hook para obtener datos de la reserva activa.
+
+**Returns**:
+```typescript
+{
+  reservation: any
+  hasActiveReservation: boolean
+  booker: Address
+  stakeAmount: bigint
+  shares: bigint
+  checkInDate: bigint (timestamp)
+  checkOutDate: bigint (timestamp)
+  nonce: bigint
+  isActive: boolean
+  isLoading: boolean
+  refetch(): void
+}
+```
+
+**Características**:
+- Maneja formato array y object
+- Safe parsing de tipos
+- Fallbacks para datos undefined
+
+### `useAuction.ts`
+Hook para datos de la subasta.
+
+**Returns**:
+```typescript
+{
+  bids: Bid[]
+  activeBids: Bid[]
+  highestBid: Bid | null
+  isLoading: boolean
+  refetch(): void
+}
+```
+
+**Bid Type**:
+```typescript
+{
+  bidder: Address
+  amount: bigint
+  timestamp: bigint
+  isActive: boolean
+}
+```
+
+### `usePYUSDApproval.ts`
+Hook para gestionar aprobaciones de PYUSD.
+
+**Returns**:
+```typescript
+{
+  approve(amount): Promise<void>
+  needsApproval(amount): Promise<boolean>
+  hasSufficientBalance(amount): boolean
+  allowance: bigint
+  balance: bigint
+  isPending: boolean
+  isConfirming: boolean
+  isConfirmed: boolean
+  hash?: Hash
+}
+```
+
+**Uso típico**:
+```typescript
+const { needsApproval, approve, hasSufficientBalance } = usePYUSDApproval(userAddress, spenderAddress)
+
+// Check si necesita aprobación
+const needsApprove = await needsApproval(amount)
+if (needsApprove) {
+  await approve(amount)
+}
+```
+
+---
+
+## ⚙️ Configuración
+
+### Variables de Entorno
+
+Crear archivo `.env.local`:
+
+```env
+# Privy
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+
+# RPC URLs (opcional, usa públicos por defecto)
+NEXT_PUBLIC_MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/your-key
+NEXT_PUBLIC_ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/your-key
+NEXT_PUBLIC_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-key
+NEXT_PUBLIC_ARB_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/your-key
+```
+
+### Privy Dashboard
+
+1. Ir a [dashboard.privy.io](https://dashboard.privy.io)
+2. Crear/seleccionar app
+3. Configurar:
+   - **Allowed domains**: Tu dominio (ej: `www.auktrafi.xyz`, `localhost:3000`)
+   - **Allowed origins**: Mismo que domains
+   - **Redirect URIs**: `https://tudominio.com/*`
+4. Copiar App ID a `.env.local`
+
+### Direcciones de Contratos
+
+En `src/config/wagmi.ts`:
+
+```typescript
+export const FACTORY_ADDRESS = {
+  [mainnet.id]: '0x...' as `0x${string}`,
+  [arbitrum.id]: '0x...' as `0x${string}`,
+  [sepolia.id]: '0x...' as `0x${string}`,
+  [arbitrumSepolia.id]: '0x...' as `0x${string}`,
+}
+
+export const PYUSD_ADDRESS = {
+  [mainnet.id]: '0x...' as `0x${string}`,
+  [arbitrum.id]: '0x...' as `0x${string}`,
+  [sepolia.id]: '0x...' as `0x${string}`,
+  [arbitrumSepolia.id]: '0x...' as `0x${string}`,
+}
+```
+
+---
+
+## 🚀 Instalación
+
+```bash
+# Clonar repositorio
+git clone https://github.com/Ekinoxis-evm/auktrafi-frontend.git
+cd auktrafi-frontend
+
+# Instalar dependencias
+npm install
+
+# Copiar variables de entorno
+cp env.example .env.local
+
+# Editar .env.local con tus valores
+nano .env.local
+```
+
+---
+
+## 💻 Desarrollo
+
+```bash
+# Iniciar servidor de desarrollo
+npm run dev
+
+# Abrir en navegador
+# http://localhost:3000
+```
+
+### Scripts disponibles
+
+```bash
+npm run dev      # Desarrollo en puerto 3000
+npm run build    # Build para producción
+npm run start    # Servidor de producción
+npm run lint     # Linter de código
+```
+
+---
+
+## 🌐 Despliegue
+
+### Vercel (Recomendado)
+
+1. Conectar repositorio en Vercel
+2. Configurar variables de entorno
+3. Deploy automático en cada push
+
+### Variables de entorno en Vercel
+
+```
+NEXT_PUBLIC_PRIVY_APP_ID=xxx
+```
+
+### Configuración de Privy para Producción
+
+1. Agregar dominio de producción en "Allowed domains"
+2. Agregar origin en "Allowed origins"
+3. Agregar redirect URI: `https://tudominio.com/*`
+
+---
+
+## 🐛 Troubleshooting
+
+### Wallet no conecta
+
+- Verificar Privy App ID
+- Verificar dominio en Privy Dashboard
+- Verificar que no haya errores en consola
+
+### Transacciones fallan
+
+- Verificar balance suficiente (gas + tokens)
+- Verificar aprobación de PYUSD
+- Verificar parámetros correctos
+
+### Datos no cargan
+
+- Verificar dirección del contrato
+- Verificar red seleccionada
+- Verificar RPC funcional
+- Ver console logs de debug
+
+### Página de Reservas vacía
+
+- Verificar que hay una reserva activa o bid
+- Ver console log de `useUserVaultParticipation`
+- Verificar formato de datos del contrato
+
+---
+
+## 📝 Notas de Desarrollo
+
+### PYUSD Decimals
+
+PYUSD usa **6 decimales** (no 18 como ETH):
+
+```typescript
+// Correcto
+const amount = parseUnits('100', 6) // 100 PYUSD
+
+// Incorrecto
+const amount = parseUnits('100', 18) // Error!
+```
+
+### Timestamps
+
+Los contratos devuelven timestamps en **segundos**, JavaScript usa **milisegundos**:
+
+```typescript
+// Convertir para JavaScript Date
+const jsTimestamp = Number(contractTimestamp) * 1000
+const date = new Date(jsTimestamp)
+```
+
+### Contract Data Formats
+
+Los datos del contrato pueden venir como **array** o **object**:
+
+```typescript
+// Siempre manejar ambos casos
+if (Array.isArray(data)) {
+  value = data[0]
+} else if (typeof data === 'object') {
+  value = data.field || data[0]
+}
+```
+
+---
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crear feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'Add AmazingFeature'`)
+4. Push a branch (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
+
+---
+
+## 📄 Licencia
+
+MIT License - ver archivo LICENSE
+
+---
+
+## 👥 Equipo
+
+- Desarrollado por Ekinoxis
+- Repositorio: [github.com/Ekinoxis-evm/auktrafi-frontend](https://github.com/Ekinoxis-evm/auktrafi-frontend)
+
+---
+
+## 📞 Soporte
+
+- Email: support@auktrafi.xyz
+- Discord: [Enlace]
+- Twitter: [@auktrafi]
+
+---
+
+**Última actualización**: Octubre 2025
