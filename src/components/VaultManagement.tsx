@@ -54,13 +54,41 @@ export function VaultManagement({ vaultId }: VaultManagementProps) {
     )
   }
 
-  const [creator, details, basePrice, realEstateAddress, active] = vaultInfo as [
-    string,
-    string,
-    bigint,
-    string,
-    boolean
-  ]
+  // Safe destructuring with validation
+  let creator: string, details: string, basePrice: bigint, realEstateAddress: string, active: boolean
+  
+  try {
+    // Check if vaultInfo is iterable (array or array-like)
+    if (Array.isArray(vaultInfo)) {
+      [creator, details, basePrice, realEstateAddress, active] = vaultInfo as [string, string, bigint, string, boolean]
+    } else if (vaultInfo && typeof vaultInfo === 'object') {
+      // If it's an object, try to access properties directly
+      const info = vaultInfo as Record<string | number, unknown>
+      creator = (info[0] as string) || (info.creator as string) || ''
+      details = (info[1] as string) || (info.details as string) || (info.propertyDetails as string) || 'No details'
+      basePrice = (info[2] as bigint) || (info.basePrice as bigint) || BigInt(0)
+      realEstateAddress = (info[3] as string) || (info.realEstateAddress as string) || ''
+      active = info[4] !== undefined ? (info[4] as boolean) : info.active !== undefined ? (info.active as boolean) : true
+    } else {
+      throw new Error('Invalid vault info format')
+    }
+  } catch (error) {
+    console.error('Error parsing vault info for', vaultId, ':', error)
+    return (
+      <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Unable to load vault data</h3>
+          <p className="text-sm text-yellow-600 mb-4">The vault data format is unexpected.</p>
+          <details className="text-xs text-yellow-600">
+            <summary className="cursor-pointer font-medium">View raw data</summary>
+            <pre className="mt-2 overflow-auto bg-white p-2 rounded border">
+              {JSON.stringify(vaultInfo, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2)}
+            </pre>
+          </details>
+        </div>
+      </div>
+    )
+  }
 
   const formattedPrice = Number(basePrice) / 1e6 // Assuming 6 decimals for PYUSD
 
