@@ -85,19 +85,19 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
                 🏠 {vaultId}
               </h2>
               <p className="text-lg text-gray-700 mb-4">
-                {propertyDetails || 'No details available'}
+                {propertyDetails ? String(propertyDetails) : 'No details available'}
               </p>
               <div className="flex items-center gap-4">
                 <span className={`px-4 py-2 rounded-full text-sm font-bold ${getVaultStateColor(stateNum)}`}>
                   {getVaultStateIcon(stateNum)} {getVaultStateLabel(stateNum)}
                 </span>
-                {basePrice && (
+                {basePrice && typeof basePrice === 'bigint' ? (
                   <div className="px-4 py-2 bg-gray-100 rounded-full">
                     <span className="text-sm font-semibold text-gray-700">
                       💰 Base Price: {formatUnits(basePrice, 6)} PYUSD
                     </span>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
@@ -112,7 +112,7 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-600 mb-1">Owner</p>
               <p className="font-mono text-sm font-semibold text-gray-900">
-                {owner ? `${owner.slice(0, 10)}...${owner.slice(-8)}` : 'N/A'}
+                {owner && typeof owner === 'string' ? `${owner.slice(0, 10)}...${owner.slice(-8)}` : 'N/A'}
               </p>
             </div>
           </div>
@@ -128,7 +128,7 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
           ) : isFree ? (
             <ReservationFlow 
               vaultAddress={vaultAddress} 
-              basePrice={basePrice || BigInt(0)}
+              basePrice={typeof basePrice === 'bigint' ? basePrice : BigInt(0)}
             />
           ) : isAuction ? (
             <AuctionFlow vaultAddress={vaultAddress} />

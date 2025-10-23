@@ -45,7 +45,7 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
       <div className="p-6 space-y-4">
         {/* Property Details */}
         <p className="text-gray-700 text-sm line-clamp-2">
-          {propertyDetails || 'No details available'}
+          {propertyDetails ? String(propertyDetails) : 'No details available'}
         </p>
 
         {/* Info Grid */}
@@ -53,7 +53,7 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-600 mb-1">Base Price</p>
             <p className="font-bold text-gray-900">
-              {basePrice ? `${formatUnits(basePrice, 6)} PYUSD` : 'N/A'}
+              {basePrice && typeof basePrice === 'bigint' ? `${formatUnits(basePrice, 6)} PYUSD` : 'N/A'}
             </p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">

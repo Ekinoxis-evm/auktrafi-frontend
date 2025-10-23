@@ -149,7 +149,7 @@ function OwnerCheckCard({
   const { owner } = useVaultInfo(vaultAddress)
   
   // Only show if user is the owner
-  if (owner?.toLowerCase() !== userAddress?.toLowerCase()) {
+  if (!owner || typeof owner !== 'string' || owner.toLowerCase() !== userAddress?.toLowerCase()) {
     return null
   }
 

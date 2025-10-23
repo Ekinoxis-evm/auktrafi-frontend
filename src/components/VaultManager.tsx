@@ -85,6 +85,8 @@ export function VaultManager({ vaultAddress }: VaultManagerProps) {
   }
 
   const isUserCurrentBooker = currentReservation && 
+    Array.isArray(currentReservation) &&
+    typeof currentReservation[0] === 'string' &&
     currentReservation[0]?.toLowerCase() === userAddress?.toLowerCase()
 
   return (
@@ -94,18 +96,18 @@ export function VaultManager({ vaultAddress }: VaultManagerProps) {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              🏠 {vaultId || 'Loading...'}
+              🏠 {vaultId ? String(vaultId) : 'Loading...'}
             </h2>
-            <p className="text-gray-600 mt-2">{propertyDetails}</p>
+            <p className="text-gray-600 mt-2">{propertyDetails ? String(propertyDetails) : 'No details available'}</p>
             <div className="mt-4 flex items-center gap-4">
               <span className="text-sm font-medium">
                 Status: {currentState !== undefined ? formatVaultState(Number(currentState)) : 'Loading...'}
               </span>
-              {basePrice && (
+              {basePrice && typeof basePrice === 'bigint' ? (
                 <span className="text-sm">
                   💰 Base Price: {formatUnits(basePrice, 6)} PYUSD
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
           <div className="text-right">
@@ -118,7 +120,7 @@ export function VaultManager({ vaultAddress }: VaultManagerProps) {
       </div>
 
       {/* Current Reservation */}
-      {currentReservation && currentReservation[6] && (
+      {currentReservation && Array.isArray(currentReservation) && currentReservation[6] && (
         <div className="bg-blue-50 rounded-lg shadow p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             📋 Current Reservation
@@ -126,24 +128,24 @@ export function VaultManager({ vaultAddress }: VaultManagerProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">Booker</p>
-              <p className="font-mono text-sm">{currentReservation[0]?.slice(0, 10)}...</p>
+              <p className="font-mono text-sm">{typeof currentReservation[0] === 'string' ? currentReservation[0]?.slice(0, 10) + '...' : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Stake Amount</p>
-              <p className="font-semibold">{formatUnits(currentReservation[1], 6)} PYUSD</p>
+              <p className="font-semibold">{typeof currentReservation[1] === 'bigint' ? formatUnits(currentReservation[1], 6) + ' PYUSD' : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Check-in Date</p>
-              <p className="text-sm">{new Date(Number(currentReservation[3]) * 1000).toLocaleDateString()}</p>
+              <p className="text-sm">{typeof currentReservation[3] === 'bigint' ? new Date(Number(currentReservation[3]) * 1000).toLocaleDateString() : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Check-out Date</p>
-              <p className="text-sm">{new Date(Number(currentReservation[4]) * 1000).toLocaleDateString()}</p>
+              <p className="text-sm">{typeof currentReservation[4] === 'bigint' ? new Date(Number(currentReservation[4]) * 1000).toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>
 
           {/* Booker Actions */}
-          {isUserCurrentBooker && (
+          {isUserCurrentBooker ? (
             <div className="mt-4 flex gap-2">
               <Button onClick={() => checkIn()} size="sm" disabled={isPending}>
                 ✅ Check In
@@ -155,7 +157,7 @@ export function VaultManager({ vaultAddress }: VaultManagerProps) {
                 ❌ Cancel
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
