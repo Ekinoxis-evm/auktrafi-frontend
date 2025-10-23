@@ -3,9 +3,10 @@
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { Button } from '@/components/ui/Button'
 import { useState } from 'react'
+import Link from 'next/link'
 
 export function VaultList() {
-  const { allVaultIds, refetchVaultIds, useVaultInfo } = useDigitalHouseFactory()
+  const { allVaultIds, refetchVaultIds } = useDigitalHouseFactory()
   const [selectedVault, setSelectedVault] = useState<string | null>(null)
 
   return (
@@ -61,7 +62,7 @@ function VaultCard({
 
   if (!vaultInfo) return null
 
-  const [vaultAddress, id, propertyDetails, basePrice, createdAt, isActive] = vaultInfo as any[]
+  const [vaultAddress, id, propertyDetails, basePrice, createdAt, isActive] = vaultInfo as [string, string, string, bigint, bigint, boolean]
 
   return (
     <div 
@@ -86,12 +87,17 @@ function VaultCard({
             </p>
           </div>
         </div>
-        <div>
+        <div className="flex flex-col gap-2 items-end">
           <span className={`px-2 py-1 rounded text-xs font-medium ${
             isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
           }`}>
             {isActive ? '✅ Active' : '⏸️ Inactive'}
           </span>
+          <Link href={`/admin/vault/${encodeURIComponent(id)}`}>
+            <button className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+              📊 Manage Bids
+            </button>
+          </Link>
         </div>
       </div>
     </div>

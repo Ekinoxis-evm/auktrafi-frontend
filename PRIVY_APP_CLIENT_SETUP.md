@@ -62,7 +62,7 @@ Esto habilita cookies HttpOnly automáticamente.
 1. En **App settings → Basics**
 2. Encuentra **"HttpOnly cookies"**
 3. Activa el toggle
-4. Configura **App domain**: `www.auktrafi.xyz`
+4. Configura **App domain**: `  `
 
 **Beneficios:**
 - ✅ Mayor seguridad
