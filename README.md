@@ -1,36 +1,250 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏠 Auktrafi - Decentralized Auction Platform
 
-## Getting Started
+> Decentralized Auction, Booking, and Distribution Platform for Property Vaults
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.0-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC)](https://tailwindcss.com/)
+[![Privy](https://img.shields.io/badge/Privy-Auth-purple)](https://privy.io/)
+
+## 📋 Overview
+
+Auktrafi is a comprehensive blockchain-based platform for managing and participating in property auctions. Built with modern web technologies and blockchain integration, it provides a seamless experience for both property owners and auction participants.
+
+## ✨ Features
+
+### 🏗️ **Admin Panel** (`/admin`)
+- **Create Property Vaults**: Simple form to tokenize real estate
+- **Manage Auctions**: Monitor and control your property listings
+- **Multi-Token Balance**: View ETH, ARB, PYUSD, and USD balances
+- **Network Switching**: Seamlessly switch between Ethereum and Arbitrum
+- **Funding Integration**: Add funds via wallet transfers or bridging
+
+### 🏪 **Marketplace** (`/marketplace`)
+- **Browse Auctions**: Optimized read operations with React Query
+- **Advanced Filtering**: Filter by price, status, and more
+- **Staking System**: Participate in auctions by placing stakes
+- **Real-time Updates**: Auto-refresh every 30 seconds
+- **Cross-chain Support**: Interact across Ethereum and Arbitrum
+
+### 💰 **Balance Management**
+- **Multi-Token Display**: ETH, ARB, PYUSD with USD valuations
+- **Network Switching**: One-click network changes
+- **Funding Options**:
+  - Transfer from external wallets (MetaMask, Coinbase, etc.)
+  - Cross-chain bridging (automatic detection)
+  - Manual address copy
+
+### 🔐 **Authentication**
+- **Privy Integration**: Passwordless authentication
+- **Passkey Support**: Modern, secure login
+- **Embedded Wallets**: Automatic wallet creation
+- **Multi-Wallet**: Support for external wallet connections
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- A Privy App ID ([Get one here](https://dashboard.privy.io))
+- Alchemy API key (optional, for custom RPCs)
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/Ekinoxis-evm/auktrafi-frontend.git
+cd auktrafi-frontend
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp env.example .env.local
+
+# Edit .env.local with your credentials
+nano .env.local
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Build the application
+npm run build
 
-## Learn More
+# Start production server
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🔧 Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create a `.env.local` file in the root directory:
 
-## Deploy on Vercel
+```env
+# Privy Configuration (Required)
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Optional: Custom RPC URLs
+NEXT_PUBLIC_MAINNET_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/your-api-key
+NEXT_PUBLIC_ARBITRUM_RPC_URL=https://arb-mainnet.g.alchemy.com/v2/your-api-key
+NEXT_PUBLIC_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
+NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/your-api-key
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Privy Setup
+
+1. Go to [Privy Dashboard](https://dashboard.privy.io)
+2. Create a new app
+3. Copy your App ID
+4. Configure login methods (Email, Wallet, Google, Passkey)
+5. Set up funding methods (Wallet transfers enabled by default)
+
+## 📁 Project Structure
+
+```
+auktrafi-frontend/
+├── src/
+│   ├── app/                      # Next.js app router
+│   │   ├── page.tsx             # Landing page
+│   │   ├── admin/               # Admin dashboard
+│   │   └── marketplace/         # Public marketplace
+│   ├── components/              # React components
+│   │   ├── ui/                  # Reusable UI components
+│   │   ├── BalanceCard.tsx      # Multi-token balance display
+│   │   ├── CreateVault.tsx      # Vault creation form
+│   │   ├── MarketplaceList.tsx  # Auction listings
+│   │   └── ...
+│   ├── hooks/                   # Custom React hooks
+│   │   └── useDigitalHouseFactory.ts
+│   ├── config/                  # Configuration
+│   │   └── wagmi.ts            # Blockchain config
+│   ├── contracts/              # Contract ABIs
+│   │   └── DigitalHouseFactory.json
+│   └── providers/              # React context providers
+│       └── PrivyProvider.tsx
+├── public/                     # Static assets
+├── ARCHITECTURE.md            # Architecture documentation
+├── BALANCE_MODULE.md         # Balance module docs
+└── IMPLEMENTATION_SUMMARY.md # Implementation summary
+```
+
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Authentication**: [Privy](https://privy.io/)
+- **Blockchain**: 
+  - [Wagmi](https://wagmi.sh/) - React Hooks for Ethereum
+  - [Viem](https://viem.sh/) - TypeScript Interface for Ethereum
+- **State Management**: [TanStack Query](https://tanstack.com/query) (React Query)
+- **Networks**: Ethereum, Arbitrum (+ Testnets)
+
+## 🎯 Key Features Explained
+
+### Balance Card
+
+The BalanceCard component provides a comprehensive view of user funds:
+
+```typescript
+- ETH/ARB Balance: Native token with live USD price
+- PYUSD Balance: Stablecoin with $1.00 peg
+- Total USD: Sum of all holdings
+- Network Switcher: Ethereum ↔ Arbitrum
+- Quick Actions: Fund wallet, copy address
+```
+
+### Network Switching
+
+Users can seamlessly switch between:
+- **Ethereum Mainnet** / Sepolia (testnet)
+- **Arbitrum** / Arbitrum Sepolia (testnet)
+
+Benefits:
+- Lower gas fees on Arbitrum
+- Faster transaction confirmations
+- Same functionality across both networks
+
+### Funding Options
+
+Powered by Privy, users can fund their wallets via:
+
+1. **Wallet Transfers**: Connect MetaMask, Coinbase Wallet, etc.
+2. **Cross-Chain Bridging**: Automatic detection and bridging
+3. **Manual Transfer**: Copy address and send manually
+
+## 📚 Documentation
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Complete architecture overview
+- **[BALANCE_MODULE.md](./BALANCE_MODULE.md)**: Balance module documentation
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)**: Implementation details
+
+## 🔐 Security
+
+- ✅ Privy authentication with Passkey support
+- ✅ Wallet signature required for transactions
+- ✅ Client-side and contract-level validation
+- ✅ Secure RPC connections
+- ✅ No private key exposure
+
+## 🚧 Roadmap
+
+### Short Term
+- [ ] Complete vault details display in marketplace
+- [ ] Implement actual staking transactions
+- [ ] Add real-time price feeds (CoinGecko/Chainlink)
+- [ ] Enhanced filtering and search
+
+### Medium Term
+- [ ] Multi-token support (USDC, USDT, DAI)
+- [ ] Historical balance charts
+- [ ] Notification system
+- [ ] Mobile app (React Native)
+
+### Long Term
+- [ ] DAO governance
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Social features
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Privy](https://privy.io/) for authentication infrastructure
+- [OpenZeppelin](https://openzeppelin.com/) for smart contract standards
+- [Wagmi](https://wagmi.sh/) for React hooks
+- [Next.js](https://nextjs.org/) team for the amazing framework
+
+## 📞 Support
+
+- **Documentation**: Check our docs folder
+- **Issues**: [GitHub Issues](https://github.com/Ekinoxis-evm/auktrafi-frontend/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Ekinoxis-evm/auktrafi-frontend/discussions)
+
+## 🌟 Show Your Support
+
+Give a ⭐️ if this project helped you!
+
+---
+
+Built with ❤️ by the Auktrafi Team
