@@ -39,6 +39,12 @@ export default function MarketplacePage() {
                 >
                   Marketplace
                 </Link>
+                <Link 
+                  href="/profile"
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                >
+                  Profile
+                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-3">

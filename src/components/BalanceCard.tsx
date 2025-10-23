@@ -1,7 +1,7 @@
 'use client'
 
-import { useAccount, useBalance, useSwitchChain } from 'wagmi'
-import { mainnet, arbitrum, sepolia, arbitrumSepolia } from 'wagmi/chains'
+import { useAccount, useBalance } from 'wagmi'
+import { arbitrum, arbitrumSepolia } from 'wagmi/chains'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from './ui/Button'
 import { useFundWallet } from '@privy-io/react-auth'
@@ -10,7 +10,6 @@ import { formatUnits } from 'viem'
 
 export function BalanceCard() {
   const { address, chain } = useAccount()
-  const { switchChain } = useSwitchChain()
   const { fundWallet } = useFundWallet()
 
   // ETH/Native Balance
@@ -66,7 +65,6 @@ export function BalanceCard() {
   const pyusdUsdValue = pyusdAmount * (prices?.pyusd || 0)
   const totalUsdValue = nativeUsdValue + pyusdUsdValue
 
-  const isMainnetChain = chain.id === mainnet.id || chain.id === sepolia.id
   const isArbitrumChain = chain.id === arbitrum.id || chain.id === arbitrumSepolia.id
 
   return (
@@ -145,48 +143,8 @@ export function BalanceCard() {
         </div>
       </div>
 
-      {/* Network Switcher */}
-      <div className="border-t pt-4 mb-4">
-        <div className="text-sm font-medium text-gray-700 mb-3">Switch Network</div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => switchChain({ chainId: process.env.NODE_ENV === 'production' ? mainnet.id : sepolia.id })}
-            disabled={isMainnetChain}
-            className={`px-4 py-3 rounded-lg font-medium transition-all ${
-              isMainnetChain
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-blue-50 border'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <span>🔷</span>
-              <span>Ethereum</span>
-            </div>
-            {isMainnetChain && (
-              <div className="text-xs mt-1">Connected</div>
-            )}
-          </button>
-          <button
-            onClick={() => switchChain({ chainId: process.env.NODE_ENV === 'production' ? arbitrum.id : arbitrumSepolia.id })}
-            disabled={isArbitrumChain}
-            className={`px-4 py-3 rounded-lg font-medium transition-all ${
-              isArbitrumChain
-                ? 'bg-blue-500 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-blue-50 border'
-            }`}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <span>🔵</span>
-              <span>Arbitrum</span>
-            </div>
-            {isArbitrumChain && (
-              <div className="text-xs mt-1">Connected</div>
-            )}
-          </button>
-        </div>
-      </div>
-
       {/* Actions */}
+      <div className="border-t pt-4 mb-4"></div>
       <div className="flex gap-2">
         <Button
           onClick={handleFund}

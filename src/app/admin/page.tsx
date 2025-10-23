@@ -3,8 +3,6 @@
 import { WalletConnect } from '@/components/WalletConnect'
 import { VaultList } from '@/components/VaultList'
 import { CreateVault } from '@/components/CreateVault'
-import { FundWallet } from '@/components/FundWallet'
-import { BalanceCard } from '@/components/BalanceCard'
 import { NetworkSwitcher } from '@/components/NetworkSwitcher'
 import { useAccount } from 'wagmi'
 import Link from 'next/link'
@@ -40,6 +38,12 @@ export default function AdminPage() {
                 >
                   Marketplace
                 </Link>
+                <Link 
+                  href="/profile"
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
+                >
+                  Profile
+                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-3">
@@ -67,12 +71,6 @@ export default function AdminPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Balance and Funding Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <BalanceCard />
-              <FundWallet />
-            </div>
-            
             {/* Info Banner */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
