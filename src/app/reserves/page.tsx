@@ -1,11 +1,11 @@
 'use client'
 
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
-import { useReservation } from '@/hooks/useReservation'
 import { WalletConnect } from '@/components/WalletConnect'
 import { VaultCard } from '@/components/vault/VaultCard'
 import { Layout } from '@/components/Layout'
+import DigitalHouseVaultABI from '@/contracts/DigitalHouseVault.json'
 import Link from 'next/link'
 import { useMemo } from 'react'
 
@@ -94,17 +94,17 @@ export default function ReservesPage() {
   )
 }
 
-// Component to check if user has reservation in this vault
+// Component to check if user has reservation or bids in this vault
 function ReserveVaultCard({ vaultId, userAddress }: { vaultId: string; userAddress: `0x${string}` }) {
   const { useVaultAddress } = useDigitalHouseFactory()
   const { data: vaultAddress } = useVaultAddress(vaultId)
 
   if (!vaultAddress) return null
 
-  return <ReservationCheckCard vaultAddress={vaultAddress as `0x${string}`} vaultId={vaultId} userAddress={userAddress} />
+  return <ParticipationCheckCard vaultAddress={vaultAddress as `0x${string}`} vaultId={vaultId} userAddress={userAddress} />
 }
 
-function ReservationCheckCard({ 
+function ParticipationCheckCard({ 
   vaultAddress, 
   vaultId, 
   userAddress 
@@ -113,13 +113,56 @@ function ReservationCheckCard({
   vaultId: string
   userAddress: `0x${string}`
 }) {
-  const { booker, hasActiveReservation } = useReservation(vaultAddress)
+  const { isParticipating } = useUserVaultParticipation(vaultAddress, userAddress)
   
-  // Only show if user is the booker
-  if (!hasActiveReservation || booker?.toLowerCase() !== userAddress?.toLowerCase()) {
+  // Only show if user is participating (has reservation or bids)
+  if (!isParticipating) {
     return null
   }
 
   return <VaultCard vaultAddress={vaultAddress} vaultId={vaultId} />
+}
+
+function useUserVaultParticipation(vaultAddress: `0x${string}`, userAddress?: `0x${string}`) {
+  const { currentReservation, auctionBids } = useVaultData(vaultAddress)
+
+  if (!userAddress) return { isParticipating: false }
+
+  // Check if user is the booker
+  const hasReservation = currentReservation && 
+    Array.isArray(currentReservation) &&
+    typeof currentReservation[0] === 'string' &&
+    currentReservation[0].toLowerCase() === userAddress.toLowerCase() &&
+    currentReservation[6] === true // isActive
+
+  // Check if user has active bids
+  const hasBids = auctionBids &&
+    Array.isArray(auctionBids) &&
+    auctionBids.some((bid: any) => {
+      return Array.isArray(bid) && 
+        typeof bid[0] === 'string' &&
+        bid[0].toLowerCase() === userAddress.toLowerCase() &&
+        bid[3] === true // isActive
+    })
+
+  const isParticipating = Boolean(hasReservation || hasBids)
+
+  return { isParticipating }
+}
+
+function useVaultData(vaultAddress: `0x${string}`) {
+  const { data: currentReservation } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'getCurrentReservation',
+  })
+
+  const { data: auctionBids } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'getAuctionBids',
+  })
+
+  return { currentReservation, auctionBids }
 }
 
