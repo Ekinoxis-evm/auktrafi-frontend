@@ -85,8 +85,38 @@ function VaultCard({
 
   if (!vaultInfo) return null
 
-  // Safe destructuring with fallbacks
-  const [vaultAddress, id, propertyDetails, basePrice, createdAt, isActive] = vaultInfo as [string, string, string, bigint, bigint, boolean]
+  // Safe destructuring with validation
+  let vaultAddress: string, id: string, propertyDetails: string, basePrice: bigint, createdAt: bigint, isActive: boolean
+  
+  try {
+    // Check if vaultInfo is iterable (array or array-like)
+    if (Array.isArray(vaultInfo)) {
+      [vaultAddress, id, propertyDetails, basePrice, createdAt, isActive] = vaultInfo as [string, string, string, bigint, bigint, boolean]
+    } else if (vaultInfo && typeof vaultInfo === 'object') {
+      // If it's an object, try to access properties directly
+      const info = vaultInfo as Record<string | number, unknown>
+      vaultAddress = (info[0] as string) || (info.vaultAddress as string) || ''
+      id = (info[1] as string) || (info.id as string) || vaultId
+      propertyDetails = (info[2] as string) || (info.propertyDetails as string) || 'No details available'
+      basePrice = (info[3] as bigint) || (info.basePrice as bigint) || BigInt(0)
+      createdAt = (info[4] as bigint) || (info.createdAt as bigint) || BigInt(0)
+      isActive = info[5] !== undefined ? (info[5] as boolean) : info.isActive !== undefined ? (info.isActive as boolean) : true
+    } else {
+      throw new Error('Invalid vault info format')
+    }
+  } catch (error) {
+    console.error('Error parsing vault info for', vaultId, ':', error)
+    console.log('Raw vaultInfo:', vaultInfo)
+    return (
+      <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+        <p className="text-sm text-yellow-800">⚠️ Unable to parse vault data: {vaultId}</p>
+        <details className="mt-2 text-xs text-yellow-600">
+          <summary className="cursor-pointer">View raw data</summary>
+          <pre className="mt-2 overflow-auto">{JSON.stringify(vaultInfo, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2)}</pre>
+        </details>
+      </div>
+    )
+  }
 
   return (
     <div 
