@@ -3,8 +3,7 @@
 Use this checklist to verify your Privy App Client is configured correctly.
 
 ## 🎯 App ID Verification
-
-- [ ] Your App ID: `cmh36h6zr00p5ju0di3cmzegm`
+    
 - [ ] Located at: Configuration → Settings → App info
 
 ---
@@ -171,5 +170,4 @@ You'll know it's working when:
 ---
 
 **Last updated:** After deployment to `www.auktrafi.xyz`
-**App ID:** `cmh36h6zr00p5ju0di3cmzegm`
 

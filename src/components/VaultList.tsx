@@ -1,13 +1,28 @@
 'use client'
 
+import React, { useState, useMemo } from 'react'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { Button } from '@/components/ui/Button'
-import { useState } from 'react'
 import Link from 'next/link'
 
 export function VaultList() {
   const { allVaultIds, refetchVaultIds } = useDigitalHouseFactory()
   const [selectedVault, setSelectedVault] = useState<string | null>(null)
+
+  // Safe handling of vault IDs
+  const safeVaultIds = useMemo(() => {
+    try {
+      if (!allVaultIds) return []
+      if (!Array.isArray(allVaultIds)) {
+        console.warn('allVaultIds is not an array:', allVaultIds)
+        return []
+      }
+      return allVaultIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
+    } catch (error) {
+      console.error('Error processing vault IDs:', error)
+      return []
+    }
+  }, [allVaultIds])
 
   return (
     <div className="space-y-4">
@@ -19,8 +34,8 @@ export function VaultList() {
       </div>
 
       <div className="grid gap-4">
-        {allVaultIds && Array.isArray(allVaultIds) && allVaultIds.length > 0 ? (
-          allVaultIds.map((vaultId: string) => (
+        {safeVaultIds.length > 0 ? (
+          safeVaultIds.map((vaultId) => (
             <VaultCard 
               key={vaultId} 
               vaultId={vaultId}
@@ -49,7 +64,7 @@ function VaultCard({
   onSelect: () => void
 }) {
   const { useVaultInfo } = useDigitalHouseFactory()
-  const { data: vaultInfo, isLoading } = useVaultInfo(vaultId)
+  const { data: vaultInfo, isLoading, error } = useVaultInfo(vaultId)
 
   if (isLoading) {
     return (
@@ -60,8 +75,17 @@ function VaultCard({
     )
   }
 
+  if (error) {
+    return (
+      <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+        <p className="text-sm text-red-600">⚠️ Error loading vault: {vaultId}</p>
+      </div>
+    )
+  }
+
   if (!vaultInfo) return null
 
+  // Safe destructuring with fallbacks
   const [vaultAddress, id, propertyDetails, basePrice, createdAt, isActive] = vaultInfo as [string, string, string, bigint, bigint, boolean]
 
   return (
