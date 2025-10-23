@@ -3,10 +3,9 @@
 import { WalletConnect } from '@/components/WalletConnect'
 import { BalanceCard } from '@/components/BalanceCard'
 import { FundWallet } from '@/components/FundWallet'
-import { NetworkSwitcher } from '@/components/NetworkSwitcher'
+import { Layout } from '@/components/Layout'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useAccount } from 'wagmi'
-import Link from 'next/link'
 
 export default function ProfilePage() {
   const { user, authenticated, exportWallet, logout } = usePrivy()
@@ -26,51 +25,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-8">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  👤 Profile
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage your account and wallet
-                </p>
-              </div>
-              <nav className="hidden md:flex gap-4">
-                <Link 
-                  href="/admin"
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
-                >
-                  Admin Panel
-                </Link>
-                <Link 
-                  href="/marketplace"
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
-                >
-                  Marketplace
-                </Link>
-                <Link 
-                  href="/profile"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium"
-                >
-                  Profile
-                </Link>
-              </nav>
-            </div>
-            <div className="flex items-center gap-3">
-              <NetworkSwitcher />
-              <WalletConnect />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-4xl font-bold text-gray-900 mb-2">
+            👤 Your Profile
+          </h2>
+          <p className="text-lg text-gray-600">
+            Manage your account and wallet settings
+          </p>
+        </div>
         {!authenticated ? (
           <div className="text-center py-20">
             <div className="inline-block p-8 bg-white rounded-2xl shadow-lg">
@@ -227,21 +191,7 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <p>© 2025 Auktrafi. All rights reserved.</p>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-emerald-600">Privacy Policy</a>
-              <a href="#" className="hover:text-emerald-600">Terms of Service</a>
-              <a href="#" className="hover:text-emerald-600">Support</a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </main>
+    </Layout>
   )
 }
 

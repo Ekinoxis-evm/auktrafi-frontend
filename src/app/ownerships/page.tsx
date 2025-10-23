@@ -3,21 +3,21 @@
 import { useAccount } from 'wagmi'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { useVaultInfo } from '@/hooks/useVaultInfo'
-import { WalletConnect } from '@/components/WalletConnect'
 import { CreateVault } from '@/components/CreateVault'
 import { VaultCard } from '@/components/vault/VaultCard'
-import Link from 'next/link'
+import { Layout } from '@/components/Layout'
+import { WalletConnect } from '@/components/WalletConnect'
 import { useMemo } from 'react'
 
 export default function OwnershipsPage() {
   const { address, isConnected } = useAccount()
-  const { allVaultIds, useVaultAddress, useVaultInfo } = useDigitalHouseFactory()
+  const { allVaultIds } = useDigitalHouseFactory()
 
-  // Get all vaults created by the connected user
-  const myOwnerships = useMemo(() => {
+  // Get all vaults - we'll filter by owner in the component
+  const allVaults = useMemo(() => {
     if (!allVaultIds || !Array.isArray(allVaultIds) || !address) return []
     
-    return allVaultIds.filter((vaultId: string) => {
+    return allVaultIds.filter((vaultId: string | unknown) => {
       try {
         return typeof vaultId === 'string' && vaultId.length > 0
       } catch {
@@ -28,20 +28,7 @@ export default function OwnershipsPage() {
 
   if (!isConnected) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/">
-                <h1 className="text-3xl font-bold text-gray-900 cursor-pointer">
-                  🏠 Auktrafi
-                </h1>
-              </Link>
-              <WalletConnect />
-            </div>
-          </div>
-        </header>
-
+      <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <div className="inline-block p-8 bg-white rounded-2xl shadow-lg">
@@ -56,30 +43,17 @@ export default function OwnershipsPage() {
             </div>
           </div>
         </div>
-      </main>
+      </Layout>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <h1 className="text-3xl font-bold text-gray-900 cursor-pointer">
-                🏠 Auktrafi
-              </h1>
-            </Link>
-            <WalletConnect />
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-2">
-            🏗️ My Ownerships
+            🏗️ My Properties
           </h2>
           <p className="text-lg text-gray-600">
             Create and manage your property vaults
@@ -89,7 +63,7 @@ export default function OwnershipsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Create Vault Section */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
+            <div className="sticky top-24">
               <CreateVault />
             </div>
           </div>
@@ -98,14 +72,14 @@ export default function OwnershipsPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                📋 Your Properties ({myOwnerships.length})
+                📋 Your Properties
               </h3>
 
-              {myOwnerships.length === 0 ? (
+              {allVaults.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🏘️</div>
                   <h4 className="text-xl font-bold text-gray-900 mb-2">
-                    No ownerships yet
+                    No properties yet
                   </h4>
                   <p className="text-gray-600">
                     Create your first vault to get started
@@ -113,8 +87,8 @@ export default function OwnershipsPage() {
                 </div>
               ) : (
                 <div className="grid gap-6">
-                  {myOwnerships.map((vaultId: string) => (
-                    <OwnershipVaultCard key={vaultId} vaultId={vaultId} />
+                  {allVaults.map((vaultId: string) => (
+                    <OwnershipVaultCard key={vaultId} vaultId={vaultId} userAddress={address as `0x${string}`} />
                   ))}
                 </div>
               )}
@@ -122,19 +96,18 @@ export default function OwnershipsPage() {
           </div>
         </div>
       </div>
-    </main>
+    </Layout>
   )
 }
 
 // Component to display each vault with owner check
-function OwnershipVaultCard({ vaultId }: { vaultId: string }) {
-  const { address } = useAccount()
+function OwnershipVaultCard({ vaultId, userAddress }: { vaultId: string; userAddress: `0x${string}` }) {
   const { useVaultAddress } = useDigitalHouseFactory()
   const { data: vaultAddress } = useVaultAddress(vaultId)
 
   if (!vaultAddress) return null
 
-  return <OwnerCheckCard vaultAddress={vaultAddress as `0x${string}`} vaultId={vaultId} userAddress={address as `0x${string}`} />
+  return <OwnerCheckCard vaultAddress={vaultAddress as `0x${string}`} vaultId={vaultId} userAddress={userAddress} />
 }
 
 function OwnerCheckCard({ 

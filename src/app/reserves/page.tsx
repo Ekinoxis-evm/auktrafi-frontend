@@ -5,12 +5,13 @@ import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { useReservation } from '@/hooks/useReservation'
 import { WalletConnect } from '@/components/WalletConnect'
 import { VaultCard } from '@/components/vault/VaultCard'
+import { Layout } from '@/components/Layout'
 import Link from 'next/link'
 import { useMemo } from 'react'
 
 export default function ReservesPage() {
   const { address, isConnected } = useAccount()
-  const { allVaultIds, useVaultAddress } = useDigitalHouseFactory()
+  const { allVaultIds } = useDigitalHouseFactory()
 
   // Get all vaults where user has a reservation
   const myReserves = useMemo(() => {
@@ -27,20 +28,7 @@ export default function ReservesPage() {
 
   if (!isConnected) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/">
-                <h1 className="text-3xl font-bold text-gray-900 cursor-pointer">
-                  🏠 Auktrafi
-                </h1>
-              </Link>
-              <WalletConnect />
-            </div>
-          </div>
-        </header>
-
+      <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <div className="inline-block p-8 bg-white rounded-2xl shadow-lg">
@@ -55,30 +43,17 @@ export default function ReservesPage() {
             </div>
           </div>
         </div>
-      </main>
+      </Layout>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <h1 className="text-3xl font-bold text-gray-900 cursor-pointer">
-                🏠 Auktrafi
-              </h1>
-            </Link>
-            <WalletConnect />
-          </div>
-        </div>
-      </header>
-
+    <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-gray-900 mb-2">
-            📋 My Reserves
+            📋 My Reservations
           </h2>
           <p className="text-lg text-gray-600">
             All your active reservations and bids
@@ -115,7 +90,7 @@ export default function ReservesPage() {
           )}
         </div>
       </div>
-    </main>
+    </Layout>
   )
 }
 
