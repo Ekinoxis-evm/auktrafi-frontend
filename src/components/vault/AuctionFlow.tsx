@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Address, parseUnits, formatUnits } from 'viem'
 import { useAccount } from 'wagmi'
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
 import { useVaultActions } from '@/hooks/useVaultActions'
+import { usePYUSDApproval } from '@/hooks/usePYUSDApproval'
 import { Button } from '@/components/ui/Button'
 
 interface AuctionFlowProps {
@@ -13,13 +14,32 @@ interface AuctionFlowProps {
   onSuccess?: () => void
 }
 
+enum BidStep {
+  INPUT = 'input',
+  APPROVING = 'approving',
+  BIDDING = 'bidding',
+  SUCCESS = 'success',
+}
+
 export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const { address: userAddress } = useAccount()
   const { reservation, booker, stakeAmount, checkInDate, checkOutDate, refetch: refetchReservation } = useReservation(vaultAddress)
   const { bids, activeBids, highestBid, refetch: refetchBids } = useAuction(vaultAddress)
   const { placeBid, cedeReservation, checkIn, checkOut, cancelReservation, withdrawBid, isPending, isConfirming, isConfirmed, hash } = useVaultActions(vaultAddress)
+  
+  const { 
+    approve, 
+    needsApproval, 
+    hasSufficientBalance,
+    isPending: isApprovePending,
+    isConfirming: isApproveConfirming,
+    isConfirmed: isApproveConfirmed,
+    hash: approveHash
+  } = usePYUSDApproval(userAddress, vaultAddress)
 
   const [bidAmount, setBidAmount] = useState('')
+  const [bidStep, setBidStep] = useState<BidStep>(BidStep.INPUT)
+  const [bidError, setBidError] = useState<string | null>(null)
 
   const isUserBooker = booker?.toLowerCase() === userAddress?.toLowerCase()
   const checkInTimestamp = checkInDate ? Number(checkInDate) * 1000 : 0
@@ -31,18 +51,76 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const canCheckIn = isUserBooker && checkInTimestamp && now >= checkInTimestamp && now < checkOutTimestamp
   const canCheckOut = isUserBooker && checkOutTimestamp && now >= checkOutTimestamp
 
-  const handlePlaceBid = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handlePlaceBidAfterApproval = useCallback(async () => {
     try {
       const bidInWei = parseUnits(bidAmount, 6)
+      setBidStep(BidStep.BIDDING)
       await placeBid(bidInWei)
-      setBidAmount('')
+    } catch (err) {
+      console.error('Error placing bid:', err)
+      setBidError(err instanceof Error ? err.message : 'Failed to place bid')
+      setBidStep(BidStep.INPUT)
+    }
+  }, [bidAmount, placeBid])
+
+  // Auto-progress from approving to bidding
+  useEffect(() => {
+    if (bidStep === BidStep.APPROVING && isApproveConfirmed) {
       setTimeout(() => {
-        refetchBids()
-        if (onSuccess) onSuccess()
-      }, 2000)
-    } catch (error) {
-      console.error('Error placing bid:', error)
+        handlePlaceBidAfterApproval()
+      }, 0)
+    }
+  }, [isApproveConfirmed, bidStep, handlePlaceBidAfterApproval])
+
+  // Auto-progress to success
+  useEffect(() => {
+    if (bidStep === BidStep.BIDDING && isConfirmed) {
+      setTimeout(() => {
+        setBidStep(BidStep.SUCCESS)
+        setBidAmount('')
+        setTimeout(() => {
+          refetchBids()
+          setBidStep(BidStep.INPUT)
+          if (onSuccess) onSuccess()
+        }, 2000)
+      }, 0)
+    }
+  }, [isConfirmed, bidStep, onSuccess, refetchBids])
+
+  const handlePlaceBid = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBidError(null)
+    
+    try {
+      if (!userAddress) {
+        setBidError('Please connect your wallet')
+        return
+      }
+
+      const bidInWei = parseUnits(bidAmount, 6)
+      
+      // Check balance
+      if (!hasSufficientBalance(bidInWei)) {
+        setBidError('Insufficient PYUSD balance')
+        return
+      }
+
+      // Check if approval is needed
+      const needsApprove = await needsApproval(bidInWei)
+      
+      if (needsApprove) {
+        // Start approval flow
+        setBidStep(BidStep.APPROVING)
+        await approve(bidInWei)
+      } else {
+        // Directly place bid
+        setBidStep(BidStep.BIDDING)
+        await placeBid(bidInWei)
+      }
+    } catch (err) {
+      console.error('Error in bid flow:', err)
+      setBidError(err instanceof Error ? err.message : 'Transaction failed. Please try again.')
+      setBidStep(BidStep.INPUT)
     }
   }
 
@@ -200,6 +278,7 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
                 min={stakeAmount ? Number(formatUnits(stakeAmount, 6)) + 0.01 : 0}
                 className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
+                disabled={bidStep !== BidStep.INPUT}
               />
               {highestBid && (
                 <p className="text-xs text-gray-500 mt-1">
@@ -208,13 +287,54 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
               )}
             </div>
 
+            {bidError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-600">❌ {bidError}</p>
+              </div>
+            )}
+
             <Button 
               type="submit" 
-              disabled={isPending || isConfirming}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+              disabled={bidStep !== BidStep.INPUT}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? '⏳ Preparing...' : isConfirming ? '⏳ Confirming...' : '🚀 Place Bid'}
+              {bidStep === BidStep.INPUT && '🚀 Place Bid'}
+              {bidStep === BidStep.APPROVING && (isApprovePending || isApproveConfirming) && '⏳ Approving PYUSD...'}
+              {bidStep === BidStep.BIDDING && (isPending || isConfirming) && '⏳ Placing Bid...'}
+              {bidStep === BidStep.SUCCESS && '✅ Bid Placed!'}
             </Button>
+
+            {/* Approval Transaction */}
+            {approveHash && bidStep === BidStep.APPROVING && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-300 animate-slide-up">
+                <p className="text-sm font-semibold text-blue-900 mb-1">Step 1/2: Approving PYUSD</p>
+                <p className="text-xs font-mono text-blue-700 break-all">{approveHash}</p>
+                {isApproveConfirmed && (
+                  <p className="text-sm text-blue-600 mt-2 font-semibold">✅ PYUSD approved! Placing bid...</p>
+                )}
+              </div>
+            )}
+
+            {/* Bid Transaction */}
+            {hash && (bidStep === BidStep.BIDDING || bidStep === BidStep.SUCCESS) && (
+              <div className="mt-4 p-4 bg-green-100 rounded-xl border border-green-300 animate-slide-up">
+                <p className="text-sm font-semibold text-green-900 mb-1">
+                  {approveHash ? 'Step 2/2: Placing Bid' : 'Transaction Submitted'}
+                </p>
+                <p className="text-xs font-mono text-green-700 break-all">{hash}</p>
+                {bidStep === BidStep.SUCCESS && (
+                  <p className="text-sm text-green-600 mt-2 font-semibold">✅ Bid placed successfully!</p>
+                )}
+              </div>
+            )}
+
+            {/* Progress Indicator */}
+            {bidStep !== BidStep.INPUT && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${bidStep === BidStep.APPROVING ? 'bg-blue-500 animate-pulse' : 'bg-blue-300'}`} />
+                <div className={`w-3 h-3 rounded-full ${bidStep === BidStep.BIDDING ? 'bg-purple-500 animate-pulse' : bidStep === BidStep.SUCCESS ? 'bg-purple-500' : 'bg-gray-300'}`} />
+              </div>
+            )}
           </form>
         </div>
       )}
