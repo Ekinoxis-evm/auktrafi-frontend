@@ -11,6 +11,14 @@
 
 Auktrafi is a comprehensive blockchain-based platform for managing and participating in property auctions. Built with modern web technologies and blockchain integration, it provides a seamless experience for both property owners and auction participants.
 
+## 🚨 Quick Troubleshooting
+
+**Wallet not connecting after deployment?**
+→ See **[Cache Troubleshooting Guide](./docs/setup/CLEAR_CACHE.md)**
+
+**Need to configure Privy domains?**
+→ See **[Privy Domain Config](./docs/setup/PRIVY_DOMAIN_CONFIG.md)**
+
 ## ✨ Features
 
 ### 🏗️ **Admin Panel** (`/admin`)
@@ -130,9 +138,17 @@ auktrafi-frontend/
 │   └── providers/              # React context providers
 │       └── PrivyProvider.tsx
 ├── public/                     # Static assets
-├── ARCHITECTURE.md            # Architecture documentation
-├── BALANCE_MODULE.md         # Balance module docs
-└── IMPLEMENTATION_SUMMARY.md # Implementation summary
+├── docs/                       # 📚 Documentation
+│   ├── ARCHITECTURE.md        # System architecture
+│   ├── BALANCE_MODULE.md      # Balance module
+│   ├── VAULT_MANAGEMENT.md    # Vault management
+│   ├── IMPLEMENTATION_SUMMARY.md # Implementation details
+│   └── setup/                 # Setup guides
+│       ├── VERCEL_SETUP.md
+│       ├── PRIVY_DOMAIN_CONFIG.md
+│       ├── PRIVY_APP_CLIENT_SETUP.md
+│       └── CLEAR_CACHE.md
+└── README.md                   # 👈 You are here
 ```
 
 ## 🛠️ Technology Stack
@@ -182,9 +198,17 @@ Powered by Privy, users can fund their wallets via:
 
 ## 📚 Documentation
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Complete architecture overview
-- **[BALANCE_MODULE.md](./BALANCE_MODULE.md)**: Balance module documentation
-- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)**: Implementation details
+### 📖 Core Documentation
+- **[Architecture Overview](./docs/ARCHITECTURE.md)**: Complete system architecture
+- **[Balance Module](./docs/BALANCE_MODULE.md)**: Multi-token balance management
+- **[Vault Management](./docs/VAULT_MANAGEMENT.md)**: Vault creation and bidding
+- **[Implementation Summary](./docs/IMPLEMENTATION_SUMMARY.md)**: Technical implementation details
+
+### ⚙️ Setup & Configuration
+- **[Vercel Deployment](./docs/setup/VERCEL_SETUP.md)**: Deploy to Vercel
+- **[Privy Domain Config](./docs/setup/PRIVY_DOMAIN_CONFIG.md)**: Configure Privy domains
+- **[Privy App Client Setup](./docs/setup/PRIVY_APP_CLIENT_SETUP.md)**: Privy authentication setup
+- **[Cache Troubleshooting](./docs/setup/CLEAR_CACHE.md)**: Fix Privy connection issues
 
 ## 🔐 Security
 
