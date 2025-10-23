@@ -13,7 +13,7 @@ export default function Home() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 🏠 Auktrafi
-              </h1>
+          </h1>
               <p className="text-sm text-gray-600 mt-1">
                 Decentralized Auction, Booking, and Distribution Platform
               </p>
@@ -40,41 +40,76 @@ export default function Home() {
         </div>
 
         {/* Main Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Admin Card */}
-          <Link href="/admin">
-            <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer border-2 border-transparent hover:border-blue-500">
-              <div className="text-6xl mb-4">🏗️</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                Admin Panel
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Create and manage your property vaults. Handle all write operations including vault creation and staking management.
-              </p>
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-green-600">✓</span>
-                  Create property vaults
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-green-600">✓</span>
-                  Manage your auctions
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-green-600">✓</span>
-                  Fund your wallet
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-green-600">✓</span>
-                  Monitor performance
-                </div>
-              </div>
-              <div className="inline-flex items-center gap-2 text-blue-600 font-semibold">
-                Go to Admin Panel
-                <span>→</span>
-              </div>
-            </div>
-          </Link>
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+           {/* Ownerships Card */}
+           <Link href="/ownerships">
+             <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer border-2 border-transparent hover:border-blue-500">
+               <div className="text-6xl mb-4">🏗️</div>
+               <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                 My Ownerships
+               </h3>
+               <p className="text-gray-600 mb-6">
+                 Create and manage your property vaults. Track your real-world assets and digital properties on the blockchain.
+               </p>
+               <div className="space-y-2 mb-6">
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-green-600">✓</span>
+                   Create new ownerships
+                 </div>
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-green-600">✓</span>
+                   View your properties
+                 </div>
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-green-600">✓</span>
+                   Manage auctions
+                 </div>
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-green-600">✓</span>
+                   Track performance
+                 </div>
+               </div>
+               <div className="inline-flex items-center gap-2 text-blue-600 font-semibold">
+                 Go to Ownerships
+                 <span>→</span>
+               </div>
+             </div>
+           </Link>
+           
+           {/* My Reserves Card */}
+           <Link href="/reserves">
+             <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all hover:scale-105 cursor-pointer border-2 border-transparent hover:border-emerald-500">
+               <div className="text-6xl mb-4">📋</div>
+               <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                 My Reserves
+               </h3>
+               <p className="text-gray-600 mb-6">
+                 View all your active reservations. Track check-in dates, manage bids, and handle your bookings.
+               </p>
+               <div className="space-y-2 mb-6">
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-emerald-600">✓</span>
+                   Active reservations
+                 </div>
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-emerald-600">✓</span>
+                   Manage check-ins
+                 </div>
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-emerald-600">✓</span>
+                   View bid status
+                 </div>
+                 <div className="flex items-center gap-2 text-sm text-gray-700">
+                   <span className="text-emerald-600">✓</span>
+                   Cede reservations
+                 </div>
+               </div>
+               <div className="inline-flex items-center gap-2 text-emerald-600 font-semibold">
+                 View My Reserves
+                 <span>→</span>
+               </div>
+             </div>
+           </Link>
 
           {/* Marketplace Card */}
           <Link href="/marketplace">
@@ -151,6 +186,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </main>
+      </main>
   )
 }
