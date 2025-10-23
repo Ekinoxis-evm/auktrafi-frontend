@@ -41,10 +41,35 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const [bidStep, setBidStep] = useState<BidStep>(BidStep.INPUT)
   const [bidError, setBidError] = useState<string | null>(null)
 
-  const isUserBooker = booker?.toLowerCase() === userAddress?.toLowerCase()
-  const checkInTimestamp = checkInDate ? Number(checkInDate) * 1000 : 0
-  const checkOutTimestamp = checkOutDate ? Number(checkOutDate) * 1000 : 0
+  const isUserBooker = booker && typeof booker === 'string' && userAddress 
+    ? booker.toLowerCase() === userAddress.toLowerCase() 
+    : false
+  
+  // Convert timestamps to milliseconds for JavaScript Date
+  const checkInTimestamp = checkInDate && typeof checkInDate === 'bigint' 
+    ? Number(checkInDate) * 1000 
+    : 0
+  const checkOutTimestamp = checkOutDate && typeof checkOutDate === 'bigint'
+    ? Number(checkOutDate) * 1000 
+    : 0
   const now = Date.now()
+  
+  // Format dates for display
+  const formatDate = (timestamp: number) => {
+    if (!timestamp || timestamp === 0) return 'N/A'
+    try {
+      const date = new Date(timestamp)
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch {
+      return 'Invalid Date'
+    }
+  }
   
   // Check if within 24h of check-in
   const canCede = isUserBooker && checkInTimestamp && (checkInTimestamp - now) <= 24 * 60 * 60 * 1000 && (checkInTimestamp - now) > 0
@@ -199,35 +224,48 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1">Booker</p>
-            <p className="font-mono text-sm font-semibold text-gray-900">
-              {booker ? `${booker.slice(0, 6)}...${booker.slice(-4)}` : 'N/A'}
+            <p className="text-xs text-gray-600 mb-1 font-medium">👤 Booker (First Reserver)</p>
+            <p className="font-mono text-sm font-semibold text-gray-900 break-all">
+              {booker && typeof booker === 'string' ? `${booker.slice(0, 10)}...${booker.slice(-8)}` : 'N/A'}
             </p>
             {isUserBooker && (
               <span className="inline-block mt-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-semibold">
-                You
+                ✓ You are the booker
               </span>
             )}
           </div>
           <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1">Stake Amount</p>
+            <p className="text-xs text-gray-600 mb-1 font-medium">💰 Total PYUSD Staked</p>
             <p className="text-lg font-bold text-gray-900">
-              {stakeAmount ? formatUnits(stakeAmount, 6) : '0'} PYUSD
+              {stakeAmount && typeof stakeAmount === 'bigint' ? formatUnits(stakeAmount, 6) : '0'} PYUSD
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Initial reservation stake
             </p>
           </div>
           <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1">Check-in</p>
+            <p className="text-xs text-gray-600 mb-1 font-medium">📅 Check-in Date</p>
             <p className="text-sm font-semibold text-gray-900">
-              {checkInTimestamp ? new Date(checkInTimestamp).toLocaleDateString() : 'N/A'}
+              {formatDate(checkInTimestamp)}
             </p>
+            {checkInTimestamp > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {checkInTimestamp > now ? `In ${Math.ceil((checkInTimestamp - now) / (1000 * 60 * 60 * 24))} days` : 'Available now'}
+              </p>
+            )}
           </div>
           <div className="bg-white/50 rounded-xl p-4">
-            <p className="text-xs text-gray-600 mb-1">Check-out</p>
+            <p className="text-xs text-gray-600 mb-1 font-medium">📅 Check-out Date</p>
             <p className="text-sm font-semibold text-gray-900">
-              {checkOutTimestamp ? new Date(checkOutTimestamp).toLocaleDateString() : 'N/A'}
+              {formatDate(checkOutTimestamp)}
             </p>
+            {checkOutTimestamp > 0 && checkInTimestamp > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Duration: {Math.ceil((checkOutTimestamp - checkInTimestamp) / (1000 * 60 * 60 * 24))} days
+              </p>
+            )}
           </div>
         </div>
 
