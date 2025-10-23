@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useAccount } from 'wagmi'
-import { Button } from './ui/Button'
+import { parseUnits } from 'viem'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
+import { useDigitalHouseVault } from '@/hooks/useDigitalHouseVault'
+import { usePYUSDApproval } from '@/hooks/usePYUSDApproval'
 
 interface PlaceBidModalProps {
   vaultId: string
@@ -13,12 +15,20 @@ interface PlaceBidModalProps {
 
 export function PlaceBidModal({ vaultId, onClose, onSuccess }: PlaceBidModalProps) {
   const { address, isConnected } = useAccount()
-  const { useVaultInfo } = useDigitalHouseFactory()
+  const { useVaultInfo, useVaultAddress } = useDigitalHouseFactory()
   const { data: vaultInfo } = useVaultInfo(vaultId)
+  const { data: vaultAddressData } = useVaultAddress(vaultId)
   
   const [bidAmount, setBidAmount] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [step, setStep] = useState<'input' | 'approving' | 'bidding' | 'success'>('input')
   const [error, setError] = useState<string | null>(null)
+
+  // Get vault address (use zero address if not available yet)
+  const vaultAddress = (vaultAddressData || '0x0000000000000000000000000000000000000000') as `0x${string}`
+
+  // Initialize hooks
+  const vaultHook = useDigitalHouseVault(vaultAddress)
+  const approvalHook = usePYUSDApproval(address, vaultAddressData ? vaultAddress : undefined)
 
   // Get base price from vault info
   let basePrice = BigInt(0)
@@ -37,12 +47,49 @@ export function PlaceBidModal({ vaultId, onClose, onSuccess }: PlaceBidModalProp
 
   const formattedBasePrice = Number(basePrice) / 1e6
 
+  // Handle placing the bid (after approval)
+  const handlePlaceBid = useCallback(async () => {
+    if (!vaultAddressData) return
+    
+    try {
+      const bidAmountBigInt = parseUnits(bidAmount, 6) // PYUSD has 6 decimals
+      await vaultHook.placeBid(bidAmountBigInt)
+    } catch (err) {
+      console.error('Error placing bid:', err)
+      setError(err instanceof Error ? err.message : 'Failed to place bid')
+      setStep('input')
+    }
+  }, [vaultAddressData, bidAmount, vaultHook])
+
+  // Watch for approval confirmation
+  useEffect(() => {
+    if (step === 'approving' && approvalHook.isConfirmed) {
+      setStep('bidding')
+      handlePlaceBid()
+    }
+  }, [approvalHook.isConfirmed, step, handlePlaceBid])
+
+  // Watch for bid confirmation
+  useEffect(() => {
+    if (step === 'bidding' && vaultHook.isConfirmed) {
+      setStep('success')
+      setTimeout(() => {
+        onSuccess()
+      }, 2000)
+    }
+  }, [vaultHook.isConfirmed, step, onSuccess])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
     if (!isConnected || !address) {
       setError('Please connect your wallet first')
+      return
+    }
+
+    if (!vaultAddressData) {
+      setError('Vault address not found')
       return
     }
 
@@ -57,28 +104,32 @@ export function PlaceBidModal({ vaultId, onClose, onSuccess }: PlaceBidModalProp
       return
     }
 
-    setIsSubmitting(true)
+    const bidAmountBigInt = parseUnits(bidAmount, 6) // PYUSD has 6 decimals
+
+    // Check balance
+    if (!approvalHook.hasSufficientBalance(bidAmountBigInt)) {
+      setError('Insufficient PYUSD balance')
+      return
+    }
 
     try {
-      // TODO: Implement actual bidding contract call
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log('Placing bid:', {
-        vaultId,
-        bidder: address,
-        amount: bidAmount,
-        timestamp: Date.now()
-      })
-
-      // Success
-      onSuccess()
+      // Check if approval is needed
+      if (approvalHook.needsApproval(bidAmountBigInt)) {
+        setStep('approving')
+        await approvalHook.approve(bidAmountBigInt)
+      } else {
+        // Already approved, place bid directly
+        setStep('bidding')
+        await handlePlaceBid()
+      }
     } catch (err) {
-      console.error('Error placing bid:', err)
-      setError(err instanceof Error ? err.message : 'Failed to place bid')
-      setIsSubmitting(false)
+      console.error('Error in bid process:', err)
+      setError(err instanceof Error ? err.message : 'Failed to process bid')
+      setStep('input')
     }
   }
+
+  const isSubmitting = step !== 'input'
 
   const suggestedBids = [
     formattedBasePrice,
@@ -212,10 +263,19 @@ export function PlaceBidModal({ vaultId, onClose, onSuccess }: PlaceBidModalProp
               disabled={isSubmitting || !isConnected || !bidAmount}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
-              {isSubmitting ? (
+              {step === 'approving' ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Approving PYUSD...
+                </span>
+              ) : step === 'bidding' ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Placing Bid...
+                </span>
+              ) : step === 'success' ? (
+                <span className="flex items-center justify-center gap-2">
+                  ✅ Bid Placed Successfully!
                 </span>
               ) : (
                 '🎯 Place Bid'

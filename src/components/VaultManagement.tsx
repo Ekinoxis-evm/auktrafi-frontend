@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
+import { useDigitalHouseVault } from '@/hooks/useDigitalHouseVault'
 import { Button } from './ui/Button'
 import { BidsList } from './BidsList'
 import { TransferBidModal } from './TransferBidModal'
@@ -11,32 +12,38 @@ interface VaultManagementProps {
 }
 
 export function VaultManagement({ vaultId }: VaultManagementProps) {
-  const { useVaultInfo } = useDigitalHouseFactory()
+  const { useVaultInfo, useVaultAddress } = useDigitalHouseFactory()
   const { data: vaultInfo, refetch } = useVaultInfo(vaultId)
+  const { data: vaultAddressData } = useVaultAddress(vaultId)
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
   const [selectedBidder, setSelectedBidder] = useState<string | null>(null)
 
-  // Mock bids data - In production, this would come from contract events
-  const mockBids = [
-    {
-      bidder: '0x1234567890123456789012345678901234567890',
-      amount: '1500',
-      timestamp: Date.now() - 86400000,
-      status: 'active'
-    },
-    {
-      bidder: '0x2345678901234567890123456789012345678901',
-      amount: '1800',
-      timestamp: Date.now() - 43200000,
-      status: 'active'
-    },
-    {
-      bidder: '0x3456789012345678901234567890123456789012',
-      amount: '2000',
-      timestamp: Date.now() - 3600000,
-      status: 'active'
+  const vaultAddress = (vaultAddressData || '0x0000000000000000000000000000000000000000') as `0x${string}`
+  
+  // Get bids from vault
+  const vaultHook = useDigitalHouseVault(vaultAddress)
+  
+  // Calculate bid statistics
+  const bidStats = useMemo(() => {
+    if (!vaultHook?.auctionBids || !Array.isArray(vaultHook.auctionBids)) {
+      return { count: 0, highestBid: 0 }
     }
-  ]
+    
+    const activeBids = vaultHook.auctionBids.filter((bid: unknown) => {
+      const b = bid as { isActive?: boolean }
+      return b.isActive !== false
+    })
+    
+    const amounts = activeBids.map((bid: unknown) => {
+      const b = bid as { amount: bigint }
+      return Number(b.amount) / 1e6 // PYUSD has 6 decimals
+    })
+    
+    return {
+      count: activeBids.length,
+      highestBid: amounts.length > 0 ? Math.max(...amounts) : 0
+    }
+  }, [vaultHook?.auctionBids])
 
   const handleTransferBid = (bidderAddress: string) => {
     setSelectedBidder(bidderAddress)
@@ -124,13 +131,13 @@ export function VaultManagement({ vaultId }: VaultManagementProps) {
           <div className="bg-purple-50 rounded-lg p-4">
             <div className="text-sm text-gray-600 mb-1">Total Bids</div>
             <div className="text-2xl font-bold text-purple-600">
-              {mockBids.length}
+              {bidStats.count}
             </div>
           </div>
           <div className="bg-green-50 rounded-lg p-4">
             <div className="text-sm text-gray-600 mb-1">Highest Bid</div>
             <div className="text-2xl font-bold text-green-600">
-              ${Math.max(...mockBids.map(b => Number(b.amount))).toLocaleString()}
+              ${bidStats.highestBid.toLocaleString()}
             </div>
           </div>
         </div>
@@ -180,28 +187,37 @@ export function VaultManagement({ vaultId }: VaultManagementProps) {
       </div>
 
       {/* Bids Management */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">
-            📋 Bids Management
-          </h3>
-          <span className="text-sm text-gray-600">
-            Manage and transfer bids to other participants
-          </span>
-        </div>
+      {vaultAddressData ? (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">
+              📋 Bids Management
+            </h3>
+            <span className="text-sm text-gray-600">
+              Manage and transfer bids to other participants
+            </span>
+          </div>
 
-        <BidsList 
-          bids={mockBids} 
-          onTransfer={handleTransferBid}
-        />
-      </div>
+          <BidsList 
+            vaultAddress={vaultAddress}
+            onTransfer={handleTransferBid}
+          />
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+            <p className="text-gray-600">Loading vault address...</p>
+          </div>
+        </div>
+      )}
 
       {/* Transfer Modal */}
       {isTransferModalOpen && selectedBidder && (
         <TransferBidModal
           vaultId={vaultId}
           bidderAddress={selectedBidder}
-          bidAmount={mockBids.find(b => b.bidder === selectedBidder)?.amount || '0'}
+          bidAmount={'0'} // TODO: Get actual bid amount from selected bidder
           onClose={() => {
             setIsTransferModalOpen(false)
             setSelectedBidder(null)
