@@ -58,13 +58,41 @@ export default function OwnershipsPage() {
           <p className="text-lg text-gray-600">
             Create and manage your property vaults
           </p>
+          
+          {/* Wallet Address Display - Quick Copy */}
+          {address && (
+            <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs text-blue-700 font-semibold mb-1">
+                    💼 Your Wallet Address
+                  </p>
+                  <p className="font-mono text-sm text-blue-900 font-bold">
+                    {address}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    💡 Use this address as &ldquo;Real Estate Address&rdquo; to receive vault earnings
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(address)
+                    alert('✅ Address copied to clipboard!')
+                  }}
+                  className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2"
+                >
+                  📋 Copy
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Create Vault Section */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <CreateVault />
+              <CreateVault userWallet={address} />
             </div>
           </div>
 
@@ -119,13 +147,25 @@ function OwnerCheckCard({
   vaultId: string
   userAddress: `0x${string}`
 }) {
-  const { owner } = useVaultInfo(vaultAddress)
+  const { owner, isLoading } = useVaultInfo(vaultAddress)
+  
+  // Debug logging
+  console.log('=== OWNERSHIP CHECK ===')
+  console.log('Vault ID:', vaultId)
+  console.log('Vault Address:', vaultAddress)
+  console.log('User Address:', userAddress)
+  console.log('Owner Address:', owner)
+  console.log('Is Loading:', isLoading)
+  console.log('Owner type:', typeof owner)
+  console.log('Match:', owner && typeof owner === 'string' && owner.toLowerCase() === userAddress?.toLowerCase())
   
   // Only show if user is the owner
   if (!owner || typeof owner !== 'string' || owner.toLowerCase() !== userAddress?.toLowerCase()) {
+    console.log('❌ Not owner or no match')
     return null
   }
 
+  console.log('✅ User is owner, showing vault')
   return <VaultCard vaultAddress={vaultAddress} vaultId={vaultId} showManageButton />
 }
 

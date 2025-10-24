@@ -190,18 +190,34 @@ Página de inicio con navegación a las secciones principales:
 **Componente**: `OwnershipsPage`
 
 **Características**:
-- Muestra solo vaults creados por el usuario conectado
-- Formulario para crear nuevos vaults
-- Lista de propiedades propias con opción de gestión
+- 💼 **Wallet Address Display**: Muestra la wallet conectada con botón de copia rápida
+- 🏗️ **Create Vault Form**: Formulario completo con tooltips explicativos
+- 📋 **Properties List**: Muestra solo vaults donde el usuario es owner
+- 🔍 **Debug Logging**: Console logs para troubleshooting de ownership
 
-**Datos requeridos para crear vault**:
-- ID único del vault
-- Detalles de la propiedad
-- Precio base (PYUSD)
-- Dirección de la propiedad (real estate)
+**Wallet Address Section**:
+```typescript
+- Muestra address completa en formato monospace
+- Botón "Copy" para copiar al clipboard
+- Explicación: "Use this address as Real Estate Address to receive vault earnings"
+- Background azul claro para destacar
+```
 
-**Filtrado**:
-- Solo muestra vaults donde `owner === address` del usuario
+**Create Vault Form**:
+- **Vault ID**: Identificador único (ej: "APT-NYC-101")
+- **Property Details**: Descripción de la propiedad (textarea)
+- **Base Price**: Precio mínimo en PYUSD (con 6 decimales)
+- **Real Estate Address**: 
+  - 💡 Tooltip explicativo: "Payment Destination - This wallet address will receive all PYUSD payments"
+  - 💼 Botón "Use My Wallet" para auto-rellenar con wallet conectada
+  - 📋 Hint: "Use the address shown at the top to receive payments"
+
+**Filtrado Inteligente**:
+- Solo muestra vaults donde `owner.toLowerCase() === userAddress.toLowerCase()`
+- Debug logging en consola para verificar ownership
+- Mensajes claros si no hay vaults:
+  - "🏘️ No properties yet"
+  - "Create your first vault to get started"
 
 ### 📋 My Reservations (`/reserves`)
 **Componente**: `ReservesPage`
@@ -390,24 +406,54 @@ Opciones para fondear la wallet.
 ### 🏭 Componentes de Creación
 
 #### `CreateVault.tsx`
-Formulario para crear nuevos vaults.
+Formulario mejorado para crear nuevos vaults con tooltips y asistencia.
+
+**Props**:
+```typescript
+{
+  userWallet?: `0x${string}`  // Wallet del usuario para auto-rellenar
+}
+```
 
 **Campos**:
-- Vault ID (único)
-- Property Details (descripción)
-- Base Price (PYUSD, con 6 decimales)
-- Real Estate Address (dirección física)
+- **Vault ID**: Identificador único (ej: "CASA01", "APT-NYC-101")
+- **Property Details**: Descripción detallada (textarea, 3 rows)
+- **Base Price**: Precio base en PYUSD (6 decimales, step 0.01)
+- **Real Estate Address**: 
+  - Wallet que recibirá los pagos
+  - 💡 Tooltip interactivo (hover)
+  - 💼 Botón "Use My Wallet" para auto-completar
+  - 📋 Hint debajo del campo
+
+**Tooltip "What's this?"**:
+```
+💰 Payment Destination
+This wallet address will receive all PYUSD payments from 
+reservations and bids. We recommend using your own wallet 
+address for easy access to your earnings.
+```
+
+**Funcionalidades**:
+- Auto-fill con wallet conectada
+- Validación de formato de address (0x...)
+- Estados visuales: Preparing → Confirming → Success
+- Muestra transaction hash
+- Mensaje de éxito con checkmark
 
 **Validaciones**:
 - Todos los campos requeridos
 - Base price > 0
+- Address formato válido (0x...)
 - ID único (no duplicado)
 
 **Proceso**:
-1. Validar inputs
-2. Llamar a `createVault` en el factory
-3. Esperar confirmación
-4. Refresh automático de la lista
+1. Usuario completa formulario
+2. Puede usar "Use My Wallet" para Real Estate Address
+3. Submit → `createVault(vaultId, details, basePrice, realEstateAddress)`
+4. Muestra transaction hash
+5. Confirma en blockchain
+6. Success message
+7. Auto-refresh de la lista de properties
 
 ### 📐 Componentes de Layout
 
