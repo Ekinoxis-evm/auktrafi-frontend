@@ -80,7 +80,7 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-600 mb-1">Base Price</p>
+            <p className="text-xs text-gray-600 mb-1">Floor Price</p>
             <p className="font-bold text-gray-900 text-sm">
               {basePrice && typeof basePrice === 'bigint' ? `${formatUnits(basePrice, 6)} PYUSD` : 'N/A'}
             </p>
@@ -108,7 +108,7 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
             <div className="mt-2 flex items-center gap-2 text-xs text-emerald-700">
               {stakeAmount && typeof stakeAmount === 'bigint' && stakeAmount > BigInt(0) && (
                 <span className="bg-emerald-100 px-2 py-1 rounded-full">
-                  📦 Stake: {formatUnits(stakeAmount, 6)}
+                  📦 Floor Price: {formatUnits(stakeAmount, 6)}
                 </span>
               )}
               {activeBids && activeBids.length > 0 && (
