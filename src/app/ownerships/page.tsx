@@ -70,9 +70,6 @@ export default function OwnershipsPage() {
                   <p className="font-mono text-sm text-blue-900 font-bold">
                     {address}
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    💡 Use this address as &ldquo;Real Estate Address&rdquo; to receive vault earnings
-                  </p>
                 </div>
                 <button
                   onClick={() => {
