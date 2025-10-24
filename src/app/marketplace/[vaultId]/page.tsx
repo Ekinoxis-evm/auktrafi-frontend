@@ -1,10 +1,12 @@
 'use client'
 
-import { use, useMemo } from 'react'
+import { use } from 'react'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { useVaultInfo, VaultState, getVaultStateLabel, getVaultStateColor, getVaultStateIcon } from '@/hooks/useVaultInfo'
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
+import { useReadContract, useChainId } from 'wagmi'
+import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import { WalletConnect } from '@/components/WalletConnect'
 import { ReservationFlow } from '@/components/vault/ReservationFlow'
 import { AuctionFlow } from '@/components/vault/AuctionFlow'
@@ -53,31 +55,29 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
   const { propertyDetails, basePrice, currentState, owner, isLoading } = useVaultInfo(vaultAddress)
   const { stakeAmount } = useReservation(vaultAddress)
   const { activeBids } = useAuction(vaultAddress)
+  const chainId = useChainId()
+  const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
 
   const stateNum = currentState !== undefined ? Number(currentState) : -1
   const isFree = stateNum === VaultState.FREE
   const isAuction = stateNum === VaultState.AUCTION
 
-  // Calculate Total Value Locked (TVL)
-  const totalValueLocked = useMemo(() => {
-    let total = BigInt(0)
-    
-    // Add stake amount from reservation
-    if (stakeAmount && typeof stakeAmount === 'bigint') {
-      total += stakeAmount
-    }
-    
-    // Add all active bids
-    if (activeBids && Array.isArray(activeBids)) {
-      activeBids.forEach(bid => {
-        if (bid.amount && typeof bid.amount === 'bigint') {
-          total += bid.amount
-        }
-      })
-    }
-    
-    return total
-  }, [stakeAmount, activeBids])
+  // Get the actual PYUSD balance of the vault contract (Real TVL)
+  const { data: vaultPYUSDBalance } = useReadContract({
+    address: pyusdAddress,
+    abi: [{
+      name: 'balanceOf',
+      type: 'function',
+      stateMutability: 'view',
+      inputs: [{ name: 'account', type: 'address' }],
+      outputs: [{ name: '', type: 'uint256' }]
+    }] as const,
+    functionName: 'balanceOf',
+    args: [vaultAddress],
+  })
+
+  // Total Value Locked = Actual PYUSD balance in the vault
+  const totalValueLocked = vaultPYUSDBalance || BigInt(0)
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">

@@ -4,8 +4,20 @@ import { Address, formatUnits } from 'viem'
 import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon } from '@/hooks/useVaultInfo'
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
+import { useReadContract, useChainId } from 'wagmi'
+import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import Link from 'next/link'
-import { useMemo } from 'react'
+
+// ERC20 ABI minimal for balanceOf
+const ERC20_ABI = [
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }]
+  }
+] as const
 
 interface VaultCardProps {
   vaultAddress: Address
@@ -17,27 +29,20 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
   const { propertyDetails, basePrice, currentState, isLoading } = useVaultInfo(vaultAddress)
   const { stakeAmount, checkInDate, checkOutDate, hasActiveReservation } = useReservation(vaultAddress)
   const { activeBids } = useAuction(vaultAddress)
+  
+  const chainId = useChainId()
+  const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
 
-  // Calculate Total Value Locked (TVL)
-  const totalValueLocked = useMemo(() => {
-    let total = BigInt(0)
-    
-    // Add stake amount from reservation
-    if (stakeAmount && typeof stakeAmount === 'bigint') {
-      total += stakeAmount
-    }
-    
-    // Add all active bids
-    if (activeBids && Array.isArray(activeBids)) {
-      activeBids.forEach(bid => {
-        if (bid.amount && typeof bid.amount === 'bigint') {
-          total += bid.amount
-        }
-      })
-    }
-    
-    return total
-  }, [stakeAmount, activeBids])
+  // Get the actual PYUSD balance of the vault contract (Real TVL)
+  const { data: vaultPYUSDBalance } = useReadContract({
+    address: pyusdAddress,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [vaultAddress],
+  })
+
+  // Total Value Locked = Actual PYUSD balance in the vault
+  const totalValueLocked = vaultPYUSDBalance || BigInt(0)
 
   if (isLoading) {
     return (
