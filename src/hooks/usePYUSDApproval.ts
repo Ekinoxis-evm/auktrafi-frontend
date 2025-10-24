@@ -75,8 +75,14 @@ export function usePYUSDApproval(ownerAddress?: `0x${string}`, spenderAddress?: 
   // Approve PYUSD
   const approve = async (amount: bigint) => {
     if (!spenderAddress) {
+      console.error('Spender address not provided')
       throw new Error('Spender address not provided')
     }
+    
+    console.log('=== PYUSD APPROVAL ===')
+    console.log('PYUSD Address:', pyusdAddress)
+    console.log('Spender (Vault):', spenderAddress)
+    console.log('Amount to approve:', amount.toString())
     
     return writeContract({
       address: pyusdAddress,
@@ -93,15 +99,35 @@ export function usePYUSDApproval(ownerAddress?: `0x${string}`, spenderAddress?: 
   }
 
   // Check if approval is needed
-  const needsApproval = (amount: bigint) => {
-    if (!currentAllowance) return true
-    return currentAllowance < amount
+  const needsApproval = (amount: bigint): boolean => {
+    console.log('=== CHECK APPROVAL ===')
+    console.log('Current Allowance:', currentAllowance?.toString())
+    console.log('Amount needed:', amount.toString())
+    
+    if (!currentAllowance) {
+      console.log('No allowance found, approval needed')
+      return true
+    }
+    
+    const needed = currentAllowance < amount
+    console.log('Approval needed:', needed)
+    return needed
   }
 
   // Check if user has sufficient balance
-  const hasSufficientBalance = (amount: bigint) => {
-    if (!balance) return false
-    return balance >= amount
+  const hasSufficientBalance = (amount: bigint): boolean => {
+    console.log('=== CHECK BALANCE ===')
+    console.log('Current Balance:', balance?.toString())
+    console.log('Amount needed:', amount.toString())
+    
+    if (!balance) {
+      console.log('No balance found')
+      return false
+    }
+    
+    const sufficient = balance >= amount
+    console.log('Sufficient balance:', sufficient)
+    return sufficient
   }
 
   return {

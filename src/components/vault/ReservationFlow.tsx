@@ -101,7 +101,7 @@ export function ReservationFlow({ vaultAddress, basePrice, onSuccess }: Reservat
       }
 
       // Check if approval is needed
-      const needsApprove = await needsApproval(stakeInWei)
+      const needsApprove = needsApproval(stakeInWei)
       
       if (needsApprove) {
         // Start approval flow

@@ -123,7 +123,27 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
         return
       }
 
+      // Validate bid amount
+      if (!bidAmount || bidAmount.trim() === '') {
+        setBidError('Please enter a bid amount')
+        return
+      }
+
       const bidInWei = parseUnits(bidAmount, 6)
+      
+      // Debug log
+      console.log('=== PLACE BID DEBUG ===')
+      console.log('User Address:', userAddress)
+      console.log('Vault Address:', vaultAddress)
+      console.log('Bid Amount (input):', bidAmount)
+      console.log('Bid Amount (wei):', bidInWei.toString())
+      console.log('Stake Amount:', stakeAmount?.toString())
+      
+      // Validate bid is higher than current stake
+      if (stakeAmount && typeof stakeAmount === 'bigint' && bidInWei <= stakeAmount) {
+        setBidError(`Bid must be higher than current stake (${formatUnits(stakeAmount, 6)} PYUSD)`)
+        return
+      }
       
       // Check balance
       if (!hasSufficientBalance(bidInWei)) {
@@ -132,20 +152,43 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
       }
 
       // Check if approval is needed
-      const needsApprove = await needsApproval(bidInWei)
+      console.log('Checking if approval is needed...')
+      const needsApprove = needsApproval(bidInWei)
+      console.log('Needs approval:', needsApprove)
       
       if (needsApprove) {
         // Start approval flow
+        console.log('Starting approval flow...')
         setBidStep(BidStep.APPROVING)
         await approve(bidInWei)
+        console.log('Approval completed')
       } else {
         // Directly place bid
+        console.log('Placing bid directly...')
         setBidStep(BidStep.BIDDING)
         await placeBid(bidInWei)
+        console.log('Bid placed successfully')
       }
     } catch (err) {
       console.error('Error in bid flow:', err)
-      setBidError(err instanceof Error ? err.message : 'Transaction failed. Please try again.')
+      
+      // More detailed error handling
+      let errorMessage = 'Transaction failed. Please try again.'
+      
+      if (err instanceof Error) {
+        errorMessage = err.message
+        
+        // Check for specific error types
+        if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
+          errorMessage = 'Transaction was rejected by user'
+        } else if (errorMessage.includes('insufficient funds')) {
+          errorMessage = 'Insufficient funds for gas or tokens'
+        } else if (errorMessage.includes('Invalid parameters')) {
+          errorMessage = 'Invalid parameters. Make sure bid amount is correct and higher than current stake.'
+        }
+      }
+      
+      setBidError(errorMessage)
       setBidStep(BidStep.INPUT)
     }
   }
