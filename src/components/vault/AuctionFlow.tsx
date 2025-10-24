@@ -304,12 +304,12 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
                 )}
               </div>
               <div className="bg-white/50 rounded-xl p-4">
-                <p className="text-xs text-gray-600 mb-1 font-medium">💰 Total PYUSD Staked</p>
+                <p className="text-xs text-gray-600 mb-1 font-medium">💰 Initial Reservation Stake</p>
                 <p className="text-lg font-bold text-gray-900">
                   {stakeAmount && typeof stakeAmount === 'bigint' ? formatUnits(stakeAmount, 6) : '0'} PYUSD
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Initial reservation stake
+                  First stake amount
                 </p>
               </div>
               <div className="bg-white/50 rounded-xl p-4">
