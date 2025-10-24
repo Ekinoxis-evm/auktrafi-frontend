@@ -3,7 +3,9 @@
 import { Address, formatUnits } from 'viem'
 import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon } from '@/hooks/useVaultInfo'
 import { useReservation } from '@/hooks/useReservation'
+import { useAuction } from '@/hooks/useAuction'
 import Link from 'next/link'
+import { useMemo } from 'react'
 
 interface VaultCardProps {
   vaultAddress: Address
@@ -12,8 +14,30 @@ interface VaultCardProps {
 }
 
 export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: VaultCardProps) {
-  const { propertyDetails, basePrice, currentState, owner, isLoading } = useVaultInfo(vaultAddress)
-  const { checkInDate, checkOutDate, hasActiveReservation } = useReservation(vaultAddress)
+  const { propertyDetails, basePrice, currentState, isLoading } = useVaultInfo(vaultAddress)
+  const { stakeAmount, checkInDate, checkOutDate, hasActiveReservation } = useReservation(vaultAddress)
+  const { activeBids } = useAuction(vaultAddress)
+
+  // Calculate Total Value Locked (TVL)
+  const totalValueLocked = useMemo(() => {
+    let total = BigInt(0)
+    
+    // Add stake amount from reservation
+    if (stakeAmount && typeof stakeAmount === 'bigint') {
+      total += stakeAmount
+    }
+    
+    // Add all active bids
+    if (activeBids && Array.isArray(activeBids)) {
+      activeBids.forEach(bid => {
+        if (bid.amount && typeof bid.amount === 'bigint') {
+          total += bid.amount
+        }
+      })
+    }
+    
+    return total
+  }, [stakeAmount, activeBids])
 
   if (isLoading) {
     return (
@@ -49,10 +73,10 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
         </p>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-600 mb-1">Base Price</p>
-            <p className="font-bold text-gray-900">
+            <p className="font-bold text-gray-900 text-sm">
               {basePrice && typeof basePrice === 'bigint' ? `${formatUnits(basePrice, 6)} PYUSD` : 'N/A'}
             </p>
           </div>
@@ -63,6 +87,33 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
             </p>
           </div>
         </div>
+
+        {/* Total Value Locked - Full Width Highlight */}
+        {totalValueLocked > BigInt(0) && (
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg p-4 border-2 border-emerald-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-emerald-700 font-semibold mb-1">💰 Total Value Locked</p>
+                <p className="text-2xl font-bold text-emerald-900">
+                  {formatUnits(totalValueLocked, 6)} PYUSD
+                </p>
+              </div>
+              <div className="text-4xl">🔒</div>
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-xs text-emerald-700">
+              {stakeAmount && typeof stakeAmount === 'bigint' && stakeAmount > BigInt(0) && (
+                <span className="bg-emerald-100 px-2 py-1 rounded-full">
+                  📦 Stake: {formatUnits(stakeAmount, 6)}
+                </span>
+              )}
+              {activeBids && activeBids.length > 0 && (
+                <span className="bg-teal-100 px-2 py-1 rounded-full">
+                  🎯 {activeBids.length} Bid{activeBids.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Reservation Dates */}
         {hasActiveReservation && checkInDate && checkOutDate && (

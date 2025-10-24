@@ -42,8 +42,10 @@ export function ReservationFlow({ vaultAddress, basePrice, onSuccess }: Reservat
 
   const handleCreateReservation = useCallback(async (stakeInWei: bigint) => {
     setStep(FlowStep.CREATING)
-    const checkInTimestamp = BigInt(Math.floor(new Date(checkInDate).getTime() / 1000))
-    const checkOutTimestamp = BigInt(Math.floor(new Date(checkOutDate).getTime() / 1000))
+    
+    // Set specific times: Check-in at 14:00 (2:00 PM), Check-out at 12:00 (noon)
+    const checkInTimestamp = BigInt(Math.floor(new Date(`${checkInDate}T14:00:00`).getTime() / 1000))
+    const checkOutTimestamp = BigInt(Math.floor(new Date(`${checkOutDate}T12:00:00`).getTime() / 1000))
     
     await createReservation(stakeInWei, checkInTimestamp, checkOutTimestamp)
   }, [checkInDate, checkOutDate, createReservation])
@@ -165,6 +167,9 @@ export function ReservationFlow({ vaultAddress, basePrice, onSuccess }: Reservat
               className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              ⏰ Default time: 14:00 (2:00 PM)
+            </p>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -178,6 +183,9 @@ export function ReservationFlow({ vaultAddress, basePrice, onSuccess }: Reservat
               className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              ⏰ Default time: 12:00 (Noon)
+            </p>
           </div>
         </div>
 

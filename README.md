@@ -304,6 +304,10 @@ Flujo completo para crear una reserva.
 - Fechas válidas (check-in < check-out)
 - Aprobación de PYUSD si es necesario
 
+**Horas por Defecto**:
+- ⏰ Check-in: **14:00** (2:00 PM)
+- ⏰ Check-out: **12:00** (Noon/Mediodía)
+
 **Props**:
 ```typescript
 {
@@ -755,6 +759,22 @@ Los contratos devuelven timestamps en **segundos**, JavaScript usa **milisegundo
 const jsTimestamp = Number(contractTimestamp) * 1000
 const date = new Date(jsTimestamp)
 ```
+
+### Check-in / Check-out Times
+
+Las horas están **predefinidas** en el sistema:
+
+```typescript
+// Check-in siempre a las 14:00 (2:00 PM)
+const checkInTimestamp = BigInt(Math.floor(new Date(`${checkInDate}T14:00:00`).getTime() / 1000))
+
+// Check-out siempre a las 12:00 (Noon)
+const checkOutTimestamp = BigInt(Math.floor(new Date(`${checkOutDate}T12:00:00`).getTime() / 1000))
+```
+
+**Estándar hotelero**:
+- 🏨 Check-in: 14:00 (2:00 PM) - Entrada después del mediodía
+- 🚪 Check-out: 12:00 (Noon) - Salida antes del mediodía
 
 ### Contract Data Formats
 
