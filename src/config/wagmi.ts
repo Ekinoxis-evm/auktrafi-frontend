@@ -11,10 +11,10 @@ export const config = createConfig({
   },
 })
 
-// Contract addresses per network
+// Contract addresses per network (Sub-Vault System v2.0)
 export const CONTRACT_ADDRESSES = {
-  [sepolia.id]: '0x38e797F2f6b7ae1387e5eC7288Ec216Caf7e0109',
-  [arbitrumSepolia.id]: '0xE30eBc03Cdf4c44b1bcD2Ca9aEf8bea27C6D082d',
+  [sepolia.id]: '0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F', // Updated with Sub-Vault System
+  [arbitrumSepolia.id]: '0xC3f3B1192E938A22a79149bbFc6d8218B1bC0117', // Updated with Sub-Vault System
   // Add mainnet and arbitrum addresses when deployed
   [mainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Add mainnet address
   [arbitrum.id]: '0x0000000000000000000000000000000000000000', // TODO: Add arbitrum address

@@ -26,18 +26,33 @@ export function useDigitalHouseFactory() {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = 
     useWaitForTransactionReceipt({ hash })
 
-  // Create vault function
+  // Create vault function (updated with master access code)
   const createVault = async (
     vaultId: string,
     propertyDetails: string,
     basePrice: bigint,
-    realEstateAddress: string
+    realEstateAddress: string,
+    masterAccessCode: string
   ) => {
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI.abi,
       functionName: 'createVault',
-      args: [vaultId, propertyDetails, basePrice, realEstateAddress],
+      args: [vaultId, propertyDetails, basePrice, realEstateAddress, masterAccessCode],
+    })
+  }
+
+  // Get or create date vault (Sub-Vault System)
+  const getOrCreateDateVault = async (
+    parentVaultId: string,
+    checkInDate: number,
+    checkOutDate: number
+  ) => {
+    return writeContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'getOrCreateDateVault',
+      args: [parentVaultId, checkInDate, checkOutDate],
     })
   }
 
@@ -71,6 +86,43 @@ export function useDigitalHouseFactory() {
     })
   }
 
+  // Sub-Vault System hooks
+  const useDateAvailability = (vaultId: string, checkInDate: number, checkOutDate: number) => {
+    return useReadContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'isDateRangeAvailable',
+      args: [vaultId, checkInDate, checkOutDate],
+      query: {
+        enabled: !!contractAddress && !!vaultId && checkInDate > 0 && checkOutDate > 0,
+      },
+    })
+  }
+
+  const useGetDateVault = (vaultId: string, checkInDate: number, checkOutDate: number) => {
+    return useReadContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'getDateVault',
+      args: [vaultId, checkInDate, checkOutDate],
+      query: {
+        enabled: !!contractAddress && !!vaultId && checkInDate > 0 && checkOutDate > 0,
+      },
+    })
+  }
+
+  const useGetParentVault = (subVaultAddress: string) => {
+    return useReadContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'getParentVault',
+      args: [subVaultAddress],
+      query: {
+        enabled: !!contractAddress && !!subVaultAddress && subVaultAddress !== '0x0000000000000000000000000000000000000000',
+      },
+    })
+  }
+
   return {
     // Contract info
     contractAddress,
@@ -82,6 +134,7 @@ export function useDigitalHouseFactory() {
     
     // Write functions
     createVault,
+    getOrCreateDateVault,
     isPending,
     isConfirming,
     isConfirmed,
@@ -91,6 +144,11 @@ export function useDigitalHouseFactory() {
     useVaultInfo,
     useVaultAddress,
     useOwnerVaults,
+    
+    // Sub-Vault System hooks
+    useDateAvailability,
+    useGetDateVault,
+    useGetParentVault,
   }
 }
 

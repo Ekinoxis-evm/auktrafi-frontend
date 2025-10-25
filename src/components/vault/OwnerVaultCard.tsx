@@ -1,9 +1,10 @@
 'use client'
 
 import { Address, formatUnits } from 'viem'
-import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon, VaultState } from '@/hooks/useVaultInfo'
+import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon } from '@/hooks/useVaultInfo'
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
+import { useAccessCodes } from '@/hooks/useAccessCodes'
 import { useReadContract, useChainId } from 'wagmi'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import Link from 'next/link'
@@ -29,7 +30,21 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
   const { propertyDetails, basePrice, currentState, isLoading } = useVaultInfo(vaultAddress)
   const { stakeAmount, checkInDate, checkOutDate, hasActiveReservation, booker } = useReservation(vaultAddress)
   const { activeBids } = useAuction(vaultAddress)
+  const { 
+    masterCode, 
+    currentCode, 
+    copyMasterCode, 
+    copyCurrentCode, 
+    masterCodeCopied, 
+    currentCodeCopied,
+    updateMasterCode,
+    isPending,
+    isConfirming 
+  } = useAccessCodes(vaultAddress)
   const [copied, setCopied] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [newMasterCode, setNewMasterCode] = useState('')
+  const [updateError, setUpdateError] = useState('')
   
   const chainId = useChainId()
   const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
@@ -73,6 +88,23 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
       })
     } catch {
       return 'Invalid Date'
+    }
+  }
+
+  // Handle master code update
+  const handleUpdateMasterCode = async () => {
+    setUpdateError('')
+    if (!newMasterCode || newMasterCode.length < 4) {
+      setUpdateError('Code must be at least 4 characters')
+      return
+    }
+    try {
+      await updateMasterCode(newMasterCode)
+      setShowUpdateModal(false)
+      setNewMasterCode('')
+    } catch (error) {
+      console.error('Error updating master code:', error)
+      setUpdateError('Failed to update code. Please try again.')
     }
   }
 
@@ -169,6 +201,86 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
           </div>
         </div>
 
+        {/* Access Codes Management */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border-2 border-indigo-200">
+          <h4 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+            🔑 Access Codes Management
+          </h4>
+          
+          {/* Master Access Code (Door) */}
+          <div className="bg-white rounded-lg p-4 mb-3 border-2 border-blue-300">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-sm font-bold text-blue-900">🚪 Master Code (Door Access)</p>
+                <p className="text-xs text-blue-600">This code opens the property door</p>
+              </div>
+              <button
+                onClick={() => setShowUpdateModal(true)}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all"
+              >
+                ✏️ Update
+              </button>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <div className="flex-1 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                <p className="font-mono text-2xl font-bold text-blue-900 text-center tracking-wider">
+                  {masterCode || 'Loading...'}
+                </p>
+              </div>
+              <button
+                onClick={copyMasterCode}
+                className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                  masterCodeCopied
+                    ? 'bg-green-500 text-white'
+                    : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                }`}
+              >
+                {masterCodeCopied ? '✅ Copied' : '📋 Copy'}
+              </button>
+            </div>
+          </div>
+
+          {/* Current Reservation Code (Reception) */}
+          {hasActiveReservation && currentCode && (
+            <div className="bg-white rounded-lg p-4 border-2 border-green-300">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm font-bold text-green-900">🏨 Current Code (Reception)</p>
+                  <p className="text-xs text-green-600">Guest uses this for check-in desk</p>
+                </div>
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                  Active
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <div className="flex-1 bg-green-50 rounded-lg p-3 border border-green-200">
+                  <p className="font-mono text-2xl font-bold text-green-900 text-center tracking-wider">
+                    {currentCode}
+                  </p>
+                </div>
+                <button
+                  onClick={copyCurrentCode}
+                  className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                    currentCodeCopied
+                      ? 'bg-green-500 text-white'
+                      : 'bg-green-100 hover:bg-green-200 text-green-700'
+                  }`}
+                >
+                  {currentCodeCopied ? '✅ Copied' : '📋 Copy'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!hasActiveReservation && (
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <p className="text-sm text-gray-600 text-center">
+                🏨 Current reception code will appear when a guest checks in
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Reservation Details */}
         {hasActiveReservation && (
           <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
@@ -250,6 +362,70 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
           </Link>
         </div>
       </div>
+
+      {/* Update Master Code Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              🔑 Update Master Access Code
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Current Code
+              </label>
+              <div className="bg-gray-100 rounded-lg p-3 border border-gray-300">
+                <p className="font-mono text-lg font-bold text-gray-900 text-center">
+                  {masterCode}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                New Code *
+              </label>
+              <input
+                type="text"
+                value={newMasterCode}
+                onChange={(e) => setNewMasterCode(e.target.value)}
+                placeholder="Enter new code (min 4 characters)"
+                minLength={4}
+                maxLength={12}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-lg"
+              />
+              {updateError && (
+                <p className="text-sm text-red-600 mt-1">{updateError}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Choose a secure code that you can easily share with guests
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowUpdateModal(false)
+                  setNewMasterCode('')
+                  setUpdateError('')
+                }}
+                disabled={isPending || isConfirming}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateMasterCode}
+                disabled={isPending || isConfirming || !newMasterCode}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
+              >
+                {isPending ? '⏳ Preparing...' : isConfirming ? '⏳ Confirming...' : '✅ Update Code'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -48,6 +48,19 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     functionName: 'propertyDetails',
   })
 
+  // Access code read functions
+  const { data: masterAccessCode, refetch: refetchMasterCode } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'getMasterAccessCode',
+  })
+
+  const { data: currentAccessCode, refetch: refetchCurrentCode } = useReadContract({
+    address: vaultAddress,
+    abi: DigitalHouseVaultABI.abi,
+    functionName: 'getCurrentAccessCode',
+  })
+
   // Write functions
   const { 
     data: hash,
@@ -129,6 +142,16 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     })
   }
 
+  // Update master access code
+  const updateMasterAccessCode = async (newCode: string) => {
+    return writeContract({
+      address: vaultAddress,
+      abi: DigitalHouseVaultABI.abi,
+      functionName: 'updateMasterAccessCode',
+      args: [newCode],
+    })
+  }
+
   return {
     // Read data
     vaultInfo,
@@ -139,9 +162,15 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     vaultId,
     propertyDetails,
     
+    // Access codes
+    masterAccessCode,
+    currentAccessCode,
+    
     // Refetch functions
     refetchReservation,
     refetchBids,
+    refetchMasterCode,
+    refetchCurrentCode,
     
     // Write functions
     createReservation,
@@ -151,6 +180,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     checkIn,
     checkOut,
     cancelReservation,
+    updateMasterAccessCode,
     
     // Transaction state
     isPending,

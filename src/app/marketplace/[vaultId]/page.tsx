@@ -8,7 +8,7 @@ import { useAuction } from '@/hooks/useAuction'
 import { useReadContract, useChainId } from 'wagmi'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import { WalletConnect } from '@/components/WalletConnect'
-import { ReservationFlow } from '@/components/vault/ReservationFlow'
+import { DateBookingFlow } from '@/components/vault/DateBookingFlow'
 import { AuctionFlow } from '@/components/vault/AuctionFlow'
 import Link from 'next/link'
 import { formatUnits } from 'viem'
@@ -157,7 +157,7 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
                   <div className="flex items-center gap-3 text-sm">
                     {stakeAmount && typeof stakeAmount === 'bigint' && stakeAmount > BigInt(0) && (
                       <div className="flex items-center gap-1 bg-emerald-100 px-3 py-1.5 rounded-full">
-                        <span className="text-emerald-700">📦 Initial Stake:</span>
+                        <span className="text-emerald-700">📦 Floor Price:</span>
                         <span className="font-bold text-emerald-900">{formatUnits(stakeAmount, 6)} PYUSD</span>
                       </div>
                     )}
@@ -183,8 +183,8 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
               <p className="text-gray-600">Loading vault state...</p>
             </div>
           ) : isFree ? (
-            <ReservationFlow 
-              vaultAddress={vaultAddress} 
+            <DateBookingFlow 
+              vaultId={vaultId}
               basePrice={typeof basePrice === 'bigint' ? basePrice : BigInt(0)}
             />
           ) : isAuction ? (
