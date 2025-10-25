@@ -1,7 +1,7 @@
 'use client'
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import DigitalHouseVaultABI from '@/contracts/DigitalHouseVault.json'
+import DigitalHouseVaultABI from '@/contracts/abis/DigitalHouseVault.json'
 import { Address } from 'viem'
 
 export function useDigitalHouseVault(vaultAddress: Address) {

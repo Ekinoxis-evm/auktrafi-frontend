@@ -2,7 +2,7 @@
 
 import { useReadContract } from 'wagmi'
 import { Address } from 'viem'
-import DigitalHouseVaultABI from '@/contracts/DigitalHouseVault.json'
+import DigitalHouseVaultABI from '@/contracts/abis/DigitalHouseVault.json'
 
 /**
  * Hook to fetch master access code from parent vault

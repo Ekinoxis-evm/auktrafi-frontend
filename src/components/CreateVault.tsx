@@ -22,8 +22,37 @@ export function CreateVault() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Validate all fields are filled
+    if (!formData.vaultId.trim()) {
+      alert('Please enter a Vault ID')
+      return
+    }
+    if (!formData.propertyDetails.trim()) {
+      alert('Please enter Property Details')
+      return
+    }
+    if (!formData.dailyBasePrice.trim() || isNaN(Number(formData.dailyBasePrice))) {
+      alert('Please enter a valid Nightly Rate')
+      return
+    }
+    if (!formData.masterAccessCode.trim()) {
+      alert('Please enter a Master Access Code')
+      return
+    }
+    if (formData.masterAccessCode.length < 4 || formData.masterAccessCode.length > 12) {
+      alert('Master Access Code must be between 4-12 characters')
+      return
+    }
+    
     try {
       const dailyBasePriceInWei = parseUnits(formData.dailyBasePrice, 6) // PYUSD has 6 decimals
+      
+      console.log('🏗️ Creating vault with params:', {
+        vaultId: formData.vaultId,
+        propertyDetails: formData.propertyDetails,
+        nightPrice: dailyBasePriceInWei.toString(),
+        masterAccessCode: formData.masterAccessCode
+      })
       
       // Save the master code before creating vault
       setSavedCode(formData.masterAccessCode)
@@ -35,7 +64,8 @@ export function CreateVault() {
         formData.masterAccessCode
       )
     } catch (error) {
-      console.error('Error creating vault:', error)
+      console.error('❌ Error creating vault:', error)
+      alert(`Error creating vault: ${error}`)
     }
   }
 

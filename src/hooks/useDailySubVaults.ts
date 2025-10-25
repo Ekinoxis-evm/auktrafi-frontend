@@ -4,14 +4,14 @@ import { useMemo } from 'react'
 import { useReadContract, useChainId } from 'wagmi'
 import { Address } from 'viem'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
-import DigitalHouseFactoryABI from '@/contracts/DigitalHouseFactory.json'
+import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
 
 interface DailySubVaultInfo {
   subVaultAddress: Address
   subVaultId: string
-  date: number
-  currentState: 0 | 1 | 2
-  dailyPrice: bigint
+  date: number  // Night timestamp
+  currentState: 0 | 1 | 2  // 0=FREE, 1=AUCTION, 2=SETTLED
+  dailyPrice: bigint  // Nightly price
   createdAt: number
 }
 
@@ -30,11 +30,11 @@ export function useDailySubVaults(parentVaultId: string) {
   const chainId = useChainId()
   const contractAddress = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]
 
-  // Fetch all daily sub-vaults for this parent vault
+  // Fetch all night sub-vaults for this parent vault
   const { data: rawSubVaults, isLoading, error, refetch } = useReadContract({
     address: contractAddress,
     abi: DigitalHouseFactoryABI,
-    functionName: 'getDailySubVaultsInfo',
+    functionName: 'getNightSubVaultsInfo',
     args: [parentVaultId],
     query: {
       enabled: !!contractAddress && !!parentVaultId,

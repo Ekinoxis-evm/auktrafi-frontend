@@ -10,6 +10,7 @@ import { useDailyVaultActions } from '@/hooks/useDailyVaultActions'
 import { usePYUSDApproval } from '@/hooks/usePYUSDApproval'
 import { useMasterAccessCode } from '@/hooks/useMasterAccessCode'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
+import { FundWallet } from '@/components/FundWallet'
 import Link from 'next/link'
 
 type BookingStep = 'select-dates' | 'confirm' | 'approve-pyusd' | 'create-booking' | 'success'
@@ -31,9 +32,19 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   
   const {
     createMultiDayBooking,
+    continueMultiDayBooking,
+    resetMultiBooking,
+    setBookingError,
     isPending: isBookingPending,
     isConfirming: isBookingConfirming,
     isConfirmed: isBookingConfirmed,
+    isMultiBookingInProgress,
+    isMultiBookingComplete,
+    hasMoreBookings,
+    currentBookingIndex,
+    totalBookings,
+    bookingProgress,
+    currentBookingDate,
   } = useDailyVaultActions(vaultId)
 
   const dailyPrice = getDailyPrice()
@@ -42,9 +53,14 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   // IMPORTANT: Approve PYUSD to factory contract, not parent vault
   const {
     approve: approvePYUSD,
+    needsApproval,
+    hasSufficientBalance,
+    balance: pyusdBalance,
+    currentAllowance,
     isPending: isApprovePending,
     isConfirming: isApproveConfirming,
     isConfirmed: isApproveConfirmed,
+    error: approvalError,
   } = usePYUSDApproval(address, factoryAddress)
 
   // Handle date selection
@@ -59,6 +75,36 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       setError('Please select at least one night')
       return
     }
+
+    // Check wallet connection
+    if (!address) {
+      setError('Please connect your wallet to continue')
+      return
+    }
+
+    // Check factory address
+    if (!factoryAddress) {
+      setError('Factory contract not available. Please switch to a supported network.')
+      return
+    }
+
+    // Check PYUSD balance
+    if (!hasSufficientBalance(totalCost)) {
+      const formattedCost = formatUnits(totalCost, 6)
+      const formattedBalance = pyusdBalance ? formatUnits(pyusdBalance, 6) : '0'
+      setError(`Insufficient PYUSD balance. Need ${formattedCost} PYUSD, but you have ${formattedBalance} PYUSD`)
+      return
+    }
+
+    console.log('✅ Validation passed - proceeding to PYUSD approval:', {
+      address,
+      factoryAddress,
+      totalCost: formatUnits(totalCost, 6),
+      balance: pyusdBalance ? formatUnits(pyusdBalance, 6) : 'N/A',
+      needsApproval: needsApproval(totalCost),
+      currentAllowance: currentAllowance ? formatUnits(currentAllowance, 6) : 'N/A'
+    })
+
     setCurrentStep('approve-pyusd')
   }
 
@@ -69,8 +115,14 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       return
     }
 
+    if (!factoryAddress) {
+      setError('Factory contract not available')
+      return
+    }
+
     console.log('🔍 Approving PYUSD:', {
       amount: totalCost.toString(),
+      formattedAmount: formatUnits(totalCost, 6),
       spender: factoryAddress,
       owner: address,
       note: 'Approving to factory contract for multi-day booking',
@@ -80,8 +132,11 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       await approvePYUSD(totalCost)
       console.log('✅ PYUSD approval transaction submitted')
     } catch (err) {
-      setError('Failed to approve PYUSD. Please check your wallet and try again.')
       console.error('❌ PYUSD approval error:', err)
+      if (approvalError) {
+        console.error('❌ Approval hook error:', approvalError)
+      }
+      setError(`Failed to approve PYUSD: ${err instanceof Error ? err.message : 'Unknown error'}. Please check your wallet and try again.`)
     }
   }
 
@@ -89,11 +144,13 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const handleCreateBooking = async () => {
     if (!masterCode) {
       setError('Master access code not available. Please try again.')
+      setBookingError('Master access code not available')
       return
     }
 
     if (selectedDates.length === 0) {
       setError('No dates selected')
+      setBookingError('No dates selected')
       return
     }
 
@@ -101,11 +158,24 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
     try {
       await createMultiDayBooking(selectedDates, masterCode)
-      console.log('✅ Booking created successfully')
+      console.log('✅ Multi-day booking process started')
     } catch (err) {
       setError('Failed to create booking. Please try again.')
+      setBookingError('Failed to create booking. Please try again.')
       console.error('❌ Booking creation error:', err)
       setCurrentStep('confirm')
+    }
+  }
+
+  // Handle continuing multi-day booking
+  const handleContinueBooking = async () => {
+    try {
+      await continueMultiDayBooking()
+      console.log('✅ Continuing to next night booking')
+    } catch (err) {
+      setError('Failed to continue booking. Please try again.')
+      setBookingError('Failed to continue booking')
+      console.error('❌ Continue booking error:', err)
     }
   }
 
@@ -118,19 +188,49 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   // Auto-create booking after moving to create-booking step
   useEffect(() => {
-    if (currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming && !isBookingConfirmed) {
+    if (currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming && !isBookingConfirmed && !isMultiBookingInProgress) {
       handleCreateBooking()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, isBookingPending, isBookingConfirming, isBookingConfirmed])
+  }, [currentStep, isBookingPending, isBookingConfirming, isBookingConfirmed, isMultiBookingInProgress])
 
-  // Auto-progress to success after booking confirmed
+  // Handle multi-booking progression - continue to next booking when current one is confirmed
   useEffect(() => {
-    if (isBookingConfirmed && currentStep === 'create-booking') {
+    if (isBookingConfirmed && currentStep === 'create-booking' && hasMoreBookings) {
+      console.log(`✅ Booking ${currentBookingIndex + 1} confirmed, continuing to next booking...`)
+      handleContinueBooking()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBookingConfirmed, currentStep, hasMoreBookings, currentBookingIndex])
+
+  // Auto-progress to success after all bookings are completed
+  useEffect(() => {
+    if (isMultiBookingComplete && currentStep === 'create-booking') {
+      console.log('✅ All bookings completed successfully!')
       refetchSubVaults()
       setCurrentStep('success')
     }
-  }, [isBookingConfirmed, currentStep, refetchSubVaults])
+  }, [isMultiBookingComplete, currentStep, refetchSubVaults])
+
+  // Handle single booking completion (when not multi-booking)
+  useEffect(() => {
+    if (isBookingConfirmed && currentStep === 'create-booking' && !isMultiBookingInProgress && !hasMoreBookings) {
+      console.log('✅ Single booking completed!')
+      refetchSubVaults()
+      setCurrentStep('success')
+    }
+  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, refetchSubVaults])
+
+  // Cleanup multi-booking state when component unmounts or when starting fresh
+  useEffect(() => {
+    return () => {
+      if (isMultiBookingInProgress) {
+        console.log('🧹 Cleaning up multi-booking state')
+        resetMultiBooking()
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -160,14 +260,53 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                     <span className="text-blue-800 font-bold text-lg">Total Cost:</span>
                     <span className="font-bold text-blue-900 text-2xl">{formatUnits(totalCost, 6)} PYUSD</span>
                   </div>
+                  
+                  {/* Wallet Status */}
+                  {address ? (
+                    <div className="mt-4 pt-3 border-t border-blue-200">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-blue-600">Your PYUSD Balance:</span>
+                        <span className="font-medium text-blue-800">
+                          {pyusdBalance ? formatUnits(pyusdBalance, 6) : '0'} PYUSD
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs mt-1">
+                        <span className="text-blue-600">Balance Status:</span>
+                        <span className={`font-medium ${hasSufficientBalance(totalCost) ? 'text-green-600' : 'text-red-600'}`}>
+                          {hasSufficientBalance(totalCost) ? '✅ Sufficient' : '❌ Insufficient'}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 pt-3 border-t border-blue-200 text-center">
+                      <span className="text-yellow-700 text-sm font-medium">⚠️ Connect wallet to check balance</span>
+                    </div>
+                  )}
                 </div>
                 
                 <Button
                   onClick={handleConfirmBooking}
-                  className="w-full py-4 text-lg font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg"
+                  disabled={!address || !hasSufficientBalance(totalCost)}
+                  className={`w-full py-4 text-lg font-bold shadow-lg ${
+                    !address || !hasSufficientBalance(totalCost)
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                  }`}
                 >
-                  🏨 Book {selectedDates.length} Night{selectedDates.length !== 1 ? 's' : ''} Now →
+                  {!address
+                    ? '🔗 Connect Wallet to Book'
+                    : !hasSufficientBalance(totalCost)
+                    ? '💳 Insufficient PYUSD Balance'
+                    : `🏨 Book ${selectedDates.length} Night${selectedDates.length !== 1 ? 's' : ''} Now →`
+                  }
                 </Button>
+              </div>
+            )}
+            
+            {/* Show FundWallet if insufficient balance */}
+            {address && selectedDates.length > 0 && !hasSufficientBalance(totalCost) && (
+              <div className="mt-6">
+                <FundWallet />
               </div>
             )}
           </div>
@@ -232,6 +371,24 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                 Approve {formatUnits(totalCost, 6)} PYUSD to complete your booking for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}.
               </p>
 
+              {/* Approval Status */}
+              <div className="mb-4 p-3 bg-white rounded-md border">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-600">Current Allowance:</span>
+                  <span className="font-medium">{currentAllowance ? formatUnits(currentAllowance, 6) : '0'} PYUSD</span>
+                </div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-600">Required Amount:</span>
+                  <span className="font-medium">{formatUnits(totalCost, 6)} PYUSD</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Approval Status:</span>
+                  <span className={`font-medium ${needsApproval(totalCost) ? 'text-red-600' : 'text-green-600'}`}>
+                    {needsApproval(totalCost) ? 'Approval Required' : 'Already Approved'}
+                  </span>
+                </div>
+              </div>
+
               {isApprovePending || isApproveConfirming ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto mb-2"></div>
@@ -239,13 +396,23 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                     {isApprovePending ? 'Waiting for approval...' : 'Confirming approval...'}
                   </p>
                 </div>
-              ) : (
+              ) : needsApproval(totalCost) ? (
                 <Button
                   onClick={handleApprovePYUSD}
                   className="w-full"
                 >
                   Approve PYUSD
                 </Button>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-green-700 font-medium mb-2">✅ PYUSD already approved</p>
+                  <Button
+                    onClick={() => setCurrentStep('create-booking')}
+                    className="w-full"
+                  >
+                    Continue to Booking
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -258,14 +425,42 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
               <h3 className="font-semibold text-blue-900 text-lg mb-2">
                 📝 Creating Your Booking
               </h3>
-              <p className="text-blue-700 mb-4">
-                Creating reservations for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}...
-              </p>
+              
+              {isMultiBookingInProgress && totalBookings > 1 ? (
+                <div className="space-y-4">
+                  <p className="text-blue-700">
+                    Creating reservations for 🌙 {totalBookings} nights (booking each night separately)...
+                  </p>
+                  
+                  {/* Progress Bar */}
+                  <div className="bg-blue-200 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-blue-600 h-full transition-all duration-500 ease-out"
+                      style={{ width: `${bookingProgress}%` }}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between text-sm text-blue-700">
+                    <span>Progress: {Math.round(bookingProgress)}%</span>
+                    <span>Night {currentBookingIndex + 1} of {totalBookings}</span>
+                  </div>
+
+                  {currentBookingDate && (
+                    <p className="text-blue-800 font-medium">
+                      Currently booking: {currentBookingDate}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-blue-700 mb-4">
+                  Creating reservations for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}...
+                </p>
+              )}
 
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                 <p className="text-blue-700 text-sm">
-                  {isBookingPending ? 'Submitting transaction...' : 'Confirming booking...'}
+                  {isBookingPending ? 'Submitting transaction...' : isBookingConfirming ? 'Confirming booking...' : 'Processing...'}
                 </p>
               </div>
             </div>
@@ -307,6 +502,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                     setSelectedDates([])
                     setCurrentStep('select-dates')
                     setError('')
+                    resetMultiBooking()
                   }}
                   className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700"
                 >

@@ -2,7 +2,7 @@
 
 import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
-import DigitalHouseFactoryABI from '@/contracts/DigitalHouseFactory.json'
+import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
 import { dateToTimestamp } from '@/config/wagmi'
 
 /**

@@ -3,7 +3,7 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useChainId } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
-import DigitalHouseFactoryABI from '@/contracts/DigitalHouseFactory.json'
+import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
 
 export function useDigitalHouseFactory() {
   const chainId = useChainId()
@@ -38,6 +38,20 @@ export function useDigitalHouseFactory() {
     nightPrice: bigint,
     masterAccessCode: string
   ) => {
+    if (!contractAddress) {
+      throw new Error(`Contract address not found for chain ${chainId}. Make sure you're connected to a supported network (Sepolia or Arbitrum Sepolia).`)
+    }
+
+    console.log('🏗️ CreateVault call details:', {
+      contractAddress,
+      chainId,
+      vaultId,
+      propertyDetails,
+      nightPrice: nightPrice.toString(),
+      masterAccessCode,
+      args: [vaultId, propertyDetails, nightPrice, masterAccessCode]
+    })
+
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
