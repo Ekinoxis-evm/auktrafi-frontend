@@ -28,3 +28,21 @@ export const PYUSD_ADDRESSES = {
   [arbitrum.id]: '0x0000000000000000000000000000000000000000', // TODO: Add arbitrum PYUSD address
 } as const
 
+// Date utility functions for daily sub-vault system
+export const dateToTimestamp = (date: Date): number => {
+  // Get start of day in UTC
+  const d = new Date(date)
+  d.setUTCHours(0, 0, 0, 0)
+  return Math.floor(d.getTime() / 1000)
+}
+
+export const timestampToDate = (timestamp: number): Date => {
+  return new Date(timestamp * 1000)
+}
+
+export const getStartOfDay = (date: Date): Date => {
+  const d = new Date(date)
+  d.setUTCHours(0, 0, 0, 0)
+  return d
+}
+

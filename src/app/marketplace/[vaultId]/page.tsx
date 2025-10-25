@@ -8,7 +8,8 @@ import { useAuction } from '@/hooks/useAuction'
 import { useReadContract, useChainId } from 'wagmi'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import { WalletConnect } from '@/components/WalletConnect'
-import { DateBookingFlow } from '@/components/vault/DateBookingFlow'
+import { DailyBookingFlow } from '@/components/vault/DailyBookingFlow'
+import { ActiveDailyBookings } from '@/components/calendar/ActiveDailyBookings'
 import { AuctionFlow } from '@/components/vault/AuctionFlow'
 import Link from 'next/link'
 import { formatUnits } from 'viem'
@@ -225,36 +226,36 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
           <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200">
             <h4 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
               <span className="text-2xl">💡</span>
-              How Sub-Vault Booking Works
+              How Daily Booking Works
             </h4>
             <div className="grid md:grid-cols-4 gap-4 text-center">
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
                   <span className="text-2xl">1️⃣</span>
                 </div>
-                <p className="text-sm font-semibold text-indigo-900">Select Dates</p>
-                <p className="text-xs text-indigo-600">Pick your check-in & check-out</p>
+                <p className="text-sm font-semibold text-indigo-900">Select Days</p>
+                <p className="text-xs text-indigo-600">Pick individual dates from calendar</p>
               </div>
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
                   <span className="text-2xl">2️⃣</span>
                 </div>
-                <p className="text-sm font-semibold text-indigo-900">Place Stake</p>
-                <p className="text-xs text-indigo-600">Start with minimum price</p>
+                <p className="text-sm font-semibold text-indigo-900">Approve PYUSD</p>
+                <p className="text-xs text-indigo-600">Approve daily rate × days</p>
               </div>
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
                   <span className="text-2xl">3️⃣</span>
                 </div>
-                <p className="text-sm font-semibold text-indigo-900">Auction Period</p>
-                <p className="text-xs text-indigo-600">Others can outbid you</p>
+                <p className="text-sm font-semibold text-indigo-900">Create Booking</p>
+                <p className="text-xs text-indigo-600">Instant reservation</p>
               </div>
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
                   <span className="text-2xl">4️⃣</span>
                 </div>
-                <p className="text-sm font-semibold text-indigo-900">Check In</p>
-                <p className="text-xs text-indigo-600">Receive access codes</p>
+                <p className="text-sm font-semibold text-indigo-900">Access Codes</p>
+                <p className="text-xs text-indigo-600">Available after check-in</p>
               </div>
             </div>
           </div>
@@ -285,10 +286,15 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
               <p className="text-gray-600">Loading vault state...</p>
             </div>
           ) : isFree ? (
-            <DateBookingFlow 
-              vaultId={vaultId}
-              basePrice={typeof basePrice === 'bigint' ? basePrice : BigInt(0)}
-            />
+            <>
+              <DailyBookingFlow 
+                vaultId={vaultId}
+                parentVaultAddress={vaultAddress}
+              />
+              <div className="mt-8">
+                <ActiveDailyBookings parentVaultId={vaultId} />
+              </div>
+            </>
           ) : isAuction ? (
             <AuctionFlow vaultAddress={vaultAddress} />
           ) : (

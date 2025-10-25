@@ -4,6 +4,7 @@ import { Address, formatUnits } from 'viem'
 import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon } from '@/hooks/useVaultInfo'
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
+import { useDailySubVaults } from '@/hooks/useDailySubVaults'
 import { useReadContract, useChainId } from 'wagmi'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import Link from 'next/link'
@@ -29,6 +30,7 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
   const { propertyDetails, basePrice, currentState, isLoading } = useVaultInfo(vaultAddress)
   const { stakeAmount, checkInDate, checkOutDate, hasActiveReservation } = useReservation(vaultAddress)
   const { activeBids } = useAuction(vaultAddress)
+  const { dailySubVaults } = useDailySubVaults(vaultId)
   
   const chainId = useChainId()
   const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
@@ -68,11 +70,31 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
             {getVaultStateIcon(stateNum)} {getVaultStateLabel(stateNum)}
           </span>
         </div>
-        {/* Booking Availability Indicator */}
-        <div className="flex items-center gap-2">
-          <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white border border-white/30">
-            📅 Multiple Booking Options Available
-          </span>
+        {/* Daily Booking Stats */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {dailySubVaults.length === 0 ? (
+            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white border border-white/30">
+              📅 All dates available
+            </span>
+          ) : (
+            <>
+              {dailySubVaults.filter(sv => sv.currentState === 0).length > 0 && (
+                <span className="bg-green-500/90 px-2 py-1 rounded-full text-xs font-bold text-white">
+                  🟢 {dailySubVaults.filter(sv => sv.currentState === 0).length} free
+                </span>
+              )}
+              {dailySubVaults.filter(sv => sv.currentState === 1).length > 0 && (
+                <span className="bg-yellow-500/90 px-2 py-1 rounded-full text-xs font-bold text-white">
+                  🟡 {dailySubVaults.filter(sv => sv.currentState === 1).length} auction
+                </span>
+              )}
+              {dailySubVaults.filter(sv => sv.currentState === 2).length > 0 && (
+                <span className="bg-red-500/90 px-2 py-1 rounded-full text-xs font-bold text-white">
+                  🔴 {dailySubVaults.filter(sv => sv.currentState === 2).length} occupied
+                </span>
+              )}
+            </>
+          )}
         </div>
       </div>
 
