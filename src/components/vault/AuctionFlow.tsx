@@ -25,7 +25,7 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
   const { address: userAddress } = useAccount()
   const { reservation, booker, stakeAmount, checkInDate, checkOutDate, isLoading: isLoadingReservation, refetch: refetchReservation } = useReservation(vaultAddress)
   const { bids, activeBids, highestBid, refetch: refetchBids } = useAuction(vaultAddress)
-  const { placeBid, cedeReservation, checkIn, checkOut, cancelReservation, withdrawBid, isPending, isConfirming, isConfirmed, hash, accessCode, clearAccessCode } = useVaultActions(vaultAddress)
+  const { placeBid, cedeReservation, checkIn, checkOut, cancelReservation, withdrawBid, isPending, isConfirming, isConfirmed, hash } = useVaultActions(vaultAddress)
   
   const { 
     approve, 
@@ -220,7 +220,6 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
 
   const handleCheckIn = async () => {
     try {
-      clearAccessCode() // Clear any previous access code
       await checkIn()
       setTimeout(() => {
         refetchReservation()
@@ -516,68 +515,6 @@ export function AuctionFlow({ vaultAddress, onSuccess }: AuctionFlowProps) {
                 </div>
               )
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Access Code Display - Prominent when available */}
-      {accessCode && (
-        <div className="bg-gradient-to-r from-green-100 via-emerald-100 to-teal-100 rounded-2xl p-8 border-2 border-green-300 shadow-xl animate-slide-up">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🔑</div>
-            <h3 className="text-2xl font-bold text-green-900 mb-2">
-              Check-in Successful!
-            </h3>
-            <p className="text-green-700 mb-6">
-              Your property access code is ready
-            </p>
-            
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-200 mb-6">
-              <p className="text-sm text-gray-600 mb-2 font-semibold">🏠 ACCESS CODE</p>
-              <div className="text-6xl font-mono font-bold text-green-900 tracking-widest mb-4">
-                {accessCode}
-              </div>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(accessCode)
-                    alert('✅ Access code copied to clipboard!')
-                  }}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  📋 Copy Code
-                </button>
-                <button
-                  onClick={() => {
-                    const message = `🏠 Auktrafi Property Access Code: ${accessCode}`
-                    if (navigator.share) {
-                      navigator.share({ text: message })
-                    } else {
-                      navigator.clipboard.writeText(message)
-                      alert('✅ Access code copied for sharing!')
-                    }
-                  }}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  📤 Share
-                </button>
-              </div>
-            </div>
-            
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">⚠️</div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-yellow-800 mb-1">Important Instructions:</p>
-                  <ul className="text-xs text-yellow-700 space-y-1">
-                    <li>• Keep this code secure and private</li>
-                    <li>• Use this code to access the property</li>
-                    <li>• Code is valid until check-out date</li>
-                    <li>• Contact property owner if you have issues</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

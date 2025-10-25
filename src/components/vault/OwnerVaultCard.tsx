@@ -4,7 +4,6 @@ import { Address, formatUnits } from 'viem'
 import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon, VaultState } from '@/hooks/useVaultInfo'
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
-import { useAccessCode } from '@/hooks/useAccessCode'
 import { useReadContract, useChainId } from 'wagmi'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
 import Link from 'next/link'
@@ -30,9 +29,7 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
   const { propertyDetails, basePrice, currentState, isLoading } = useVaultInfo(vaultAddress)
   const { stakeAmount, checkInDate, checkOutDate, hasActiveReservation, booker } = useReservation(vaultAddress)
   const { activeBids } = useAuction(vaultAddress)
-  const { accessCode } = useAccessCode(vaultAddress)
   const [copied, setCopied] = useState(false)
-  const [copiedCode, setCopiedCode] = useState(false)
   
   const chainId = useChainId()
   const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
@@ -52,9 +49,6 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
   const additionalValue = totalValueLocked - (stakeAmount || BigInt(0))
   
   const stateNum = currentState !== undefined ? Number(currentState) : -1
-  const isFree = stateNum === VaultState.FREE
-  const isAuction = stateNum === VaultState.AUCTION
-  const isSettled = stateNum === VaultState.SETTLED
 
   // Generate access link
   const accessLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/marketplace/${encodeURIComponent(vaultId)}`
@@ -174,38 +168,6 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
             <div className="text-5xl opacity-50">💰</div>
           </div>
         </div>
-
-        {/* Access Code Display - For Owner */}
-        {accessCode && hasActiveReservation && (
-          <div className="bg-gradient-to-r from-green-100 via-emerald-100 to-teal-100 rounded-2xl p-6 border-2 border-green-300 shadow-xl">
-            <div className="text-center">
-              <div className="text-4xl mb-3">🔑</div>
-              <p className="text-sm text-gray-700 font-bold mb-2">GUEST ACCESS CODE</p>
-              <div className="text-5xl font-mono font-bold text-green-900 tracking-widest mb-4 bg-white/70 rounded-lg py-4">
-                {accessCode}
-              </div>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(accessCode)
-                    setCopiedCode(true)
-                    setTimeout(() => setCopiedCode(false), 2000)
-                  }}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg ${
-                    copiedCode 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-white text-green-700 hover:bg-green-50'
-                  }`}
-                >
-                  {copiedCode ? '✅ Copied!' : '📋 Copy Code'}
-                </button>
-              </div>
-              <p className="text-xs text-green-800 mt-3">
-                💡 Share this code with your guest for property access
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Reservation Details */}
         {hasActiveReservation && (
