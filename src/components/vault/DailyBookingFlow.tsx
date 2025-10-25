@@ -56,7 +56,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   // Handle booking confirmation
   const handleConfirmBooking = () => {
     if (selectedDates.length === 0) {
-      setError('Please select at least one date')
+      setError('Please select at least one night')
       return
     }
     setCurrentStep('approve-pyusd')
@@ -145,28 +145,28 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
             />
 
             {selectedDates.length > 0 && dailyPrice > 0 && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                <h4 className="text-lg font-bold text-blue-900 mb-4">Booking Summary</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">Daily Rate:</span>
-                    <span className="font-semibold text-blue-900">{formatUnits(dailyPrice, 6)} PYUSD/day</span>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200 shadow-xl">
+                <h4 className="text-xl font-bold text-blue-900 mb-4">💰 Booking Summary</h4>
+                <div className="space-y-3 text-sm mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700">Rate per Night:</span>
+                    <span className="font-semibold text-blue-900 text-lg">{formatUnits(dailyPrice, 6)} PYUSD</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-700">Selected Days:</span>
-                    <span className="font-semibold text-blue-900">{selectedDates.length} day{selectedDates.length !== 1 ? 's' : ''}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700">Selected Nights:</span>
+                    <span className="font-semibold text-blue-900 text-lg">🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-blue-200">
-                    <span className="text-blue-800 font-semibold">Total Cost:</span>
-                    <span className="font-bold text-blue-900 text-lg">{formatUnits(totalCost, 6)} PYUSD</span>
+                  <div className="flex justify-between items-center pt-3 border-t-2 border-blue-300">
+                    <span className="text-blue-800 font-bold text-lg">Total Cost:</span>
+                    <span className="font-bold text-blue-900 text-2xl">{formatUnits(totalCost, 6)} PYUSD</span>
                   </div>
                 </div>
                 
                 <Button
                   onClick={handleConfirmBooking}
-                  className="w-full mt-4"
+                  className="w-full py-4 text-lg font-bold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg"
                 >
-                  Continue to Booking →
+                  🏨 Book {selectedDates.length} Night{selectedDates.length !== 1 ? 's' : ''} Now →
                 </Button>
               </div>
             )}
@@ -185,11 +185,11 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                   <span className="font-semibold text-gray-900">{vaultId}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Selected Dates:</span>
-                  <span className="font-semibold text-gray-900">{selectedDates.length} days</span>
+                  <span className="text-gray-600">Selected Nights:</span>
+                  <span className="font-semibold text-gray-900">🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Daily Rate:</span>
+                  <span className="text-gray-600">Rate per Night:</span>
                   <span className="font-semibold text-gray-900">{formatUnits(dailyPrice, 6)} PYUSD</span>
                 </div>
                 <div className="flex justify-between text-sm pt-3 border-t border-gray-200">
@@ -229,7 +229,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                 💰 Approve PYUSD for Booking
               </h3>
               <p className="text-yellow-700 mb-4">
-                Approve {formatUnits(totalCost, 6)} PYUSD to complete your booking for {selectedDates.length} day{selectedDates.length !== 1 ? 's' : ''}.
+                Approve {formatUnits(totalCost, 6)} PYUSD to complete your booking for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}.
               </p>
 
               {isApprovePending || isApproveConfirming ? (
@@ -259,7 +259,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                 📝 Creating Your Booking
               </h3>
               <p className="text-blue-700 mb-4">
-                Creating reservations for {selectedDates.length} day{selectedDates.length !== 1 ? 's' : ''}...
+                Creating reservations for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}...
               </p>
 
               <div className="text-center py-4">
@@ -279,13 +279,13 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
               <div className="text-6xl mb-4">🎉</div>
               <h3 className="text-2xl font-bold text-green-900 mb-2">Booking Confirmed!</h3>
               <p className="text-green-700 font-medium mb-4">
-                Your booking for {selectedDates.length} day{selectedDates.length !== 1 ? 's' : ''} has been created successfully.
+                Your booking for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''} has been created successfully.
               </p>
 
               <div className="bg-white rounded-lg p-4 mb-6 text-left">
                 <h4 className="font-semibold text-gray-900 mb-2">Booking Details:</h4>
                 <div className="space-y-1 text-sm text-gray-700">
-                  <p>📅 Dates: {selectedDates.map(d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })).join(', ')}</p>
+                  <p>🌙 Nights: {selectedDates.map(d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })).join(', ')}</p>
                   <p>💰 Total Cost: {formatUnits(totalCost, 6)} PYUSD</p>
                   <p>🏠 Property: {vaultId}</p>
                 </div>
@@ -310,7 +310,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                   }}
                   className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700"
                 >
-                  Book More Dates
+                  Book More Nights
                 </Button>
               </div>
             </div>

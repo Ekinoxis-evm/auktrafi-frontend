@@ -120,7 +120,7 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
                 {dailyBasePrice && typeof dailyBasePrice === 'bigint' ? (
                   <div className="px-4 py-2 bg-gray-100 rounded-full">
                     <span className="text-sm font-semibold text-gray-700">
-                      💰 Daily Rate: {formatUnits(dailyBasePrice, 6)} PYUSD/day
+                      🌙 Nightly Rate: {formatUnits(dailyBasePrice, 6)} PYUSD/night
                     </span>
                   </div>
                 ) : null}
@@ -226,22 +226,22 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
           <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200">
             <h4 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
               <span className="text-2xl">💡</span>
-              How Daily Booking Works
+              How Nightly Booking Works
             </h4>
             <div className="grid md:grid-cols-4 gap-4 text-center">
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
                   <span className="text-2xl">1️⃣</span>
                 </div>
-                <p className="text-sm font-semibold text-indigo-900">Select Days</p>
-                <p className="text-xs text-indigo-600">Pick individual dates from calendar</p>
+                <p className="text-sm font-semibold text-indigo-900">Select Nights</p>
+                <p className="text-xs text-indigo-600">🌙 Pick your nights from calendar</p>
               </div>
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
                   <span className="text-2xl">2️⃣</span>
                 </div>
                 <p className="text-sm font-semibold text-indigo-900">Approve PYUSD</p>
-                <p className="text-xs text-indigo-600">Approve daily rate × days</p>
+                <p className="text-xs text-indigo-600">Approve nightly rate × nights</p>
               </div>
               <div>
                 <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">

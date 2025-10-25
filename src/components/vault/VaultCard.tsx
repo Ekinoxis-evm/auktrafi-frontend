@@ -108,9 +108,9 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
         {/* Info Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-600 mb-1">Daily Rate</p>
+            <p className="text-xs text-gray-600 mb-1">🌙 Nightly Rate</p>
             <p className="font-bold text-gray-900 text-sm">
-              {dailyBasePrice && typeof dailyBasePrice === 'bigint' ? `${formatUnits(dailyBasePrice, 6)} PYUSD/day` : 'N/A'}
+              {dailyBasePrice && typeof dailyBasePrice === 'bigint' ? `${formatUnits(dailyBasePrice, 6)} PYUSD/night` : 'N/A'}
             </p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">

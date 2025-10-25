@@ -131,9 +131,9 @@ export function DailySubVaultsCalendar({
       {/* Calendar Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">📅 Select Your Dates</h3>
+          <h3 className="text-xl font-bold text-gray-900">🌙 Select Your Nights</h3>
           <p className="text-sm text-gray-600 mt-1">
-            {selectionMode === 'single' ? 'Select a date' : 'Select multiple dates'}
+            {selectionMode === 'single' ? 'Select a night' : 'Select your nights'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ export function DailySubVaultsCalendar({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-emerald-900">
-                Selected: {selectedDates.length} day{selectedDates.length !== 1 ? 's' : ''}
+                🌙 Selected: {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}
               </p>
               <p className="text-xs text-emerald-600 mt-1">
                 {selectedDates.map((d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })).join(', ')}
@@ -249,9 +249,9 @@ export function DailySubVaultsCalendar({
             </div>
             <button
               onClick={() => onDateSelect?.([])}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-md"
+              className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium hover:bg-gray-500 transition-colors shadow-md"
             >
-              Clear Selection
+              Clear
             </button>
           </div>
         </div>

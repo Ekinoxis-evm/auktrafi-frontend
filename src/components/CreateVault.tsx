@@ -118,7 +118,7 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Daily Rate (PYUSD/day)
+            🌙 Nightly Rate (PYUSD/night)
           </label>
           <input
             type="number"
