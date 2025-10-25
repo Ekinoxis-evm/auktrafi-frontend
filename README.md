@@ -284,8 +284,95 @@ Botón reutilizable con variantes y tamaños.
 
 ### 🏦 Componentes de Vault
 
+#### `OwnerVaultCard.tsx` ⭐ NEW - For Property Owners
+**Tarjeta completa con toda la información para propietarios de vaults.**
+
+**Uso**: En la página `/ownerships` para mostrar vaults del owner con detalles completos.
+
+**Props**:
+```typescript
+{
+  vaultAddress: Address
+  vaultId: string
+}
+```
+
+**Secciones incluidas**:
+
+1. **👑 Owner Badge Header**
+   - Gradient azul/índigo premium
+   - Corona indicando propiedad
+   - Estado del vault (FREE/AUCTION/OCCUPIED)
+   - "You own this property" label
+
+2. **💰 Floor Price** (Green Card)
+   - `basePrice` del contrato
+   - "Minimum stake required"
+   - Formato: XX.XX PYUSD
+
+3. **📦 Current Stake** (Blue Card)
+   - `stakeAmount` de reserva activa
+   - Status: "Active reservation" / "No stake yet"
+   - Formato: XX.XX PYUSD
+
+4. **💎 Additional Value from Bids** (Purple Card - conditional)
+   - Solo aparece si hay bids activos
+   - Cálculo: `TVL - stakeAmount`
+   - Muestra número de bids
+   - "Beyond floor price" indicator
+
+5. **🔒 Total Value Locked** (Emerald/Teal Card)
+   - Balance real de PYUSD en vault
+   - Direct read: `PYUSD.balanceOf(vaultAddress)`
+   - Métrica más importante
+   - Formato grande: XXX PYUSD
+
+6. **📅 Active Reservation** (Yellow Card - conditional)
+   - Solo si `hasActiveReservation === true`
+   - Muestra:
+     * 👤 Booker: shortened address
+     * 🏨 Check-in: formatted date/time
+     * 🚪 Check-out: formatted date/time
+     * ⏱️ Duration: calculated days
+
+7. **🔑 Access Link**
+   - Shareable URL to marketplace page
+   - Copy button with feedback
+   - Full URL visible en monospace
+   - Tip: "Share with potential bookers"
+
+8. **🔧 Vault Address**
+   - Contract address completa
+   - Para verificación on-chain
+
+9. **👁️ Action Button**
+   - Link to public marketplace page
+   - "View Public Page"
+
+**Hooks utilizados**:
+```typescript
+useVaultInfo()       // propertyDetails, basePrice, currentState
+useReservation()     // stakeAmount, dates, booker
+useAuction()         // activeBids
+useReadContract()    // PYUSD balance (TVL)
+```
+
+**Cálculos automáticos**:
+```typescript
+totalValueLocked = PYUSD.balanceOf(vaultAddress)
+additionalValue = totalValueLocked - stakeAmount
+duration = (checkOutDate - checkInDate) / 86400 // days
+accessLink = `${origin}/marketplace/${vaultId}`
+```
+
+**Estados visuales**:
+- Loading: Skeleton animation
+- No reservation: Muestra solo financial info
+- Active reservation: Muestra todo + yellow card
+- Has bids: Muestra purple card adicional
+
 #### `VaultCard.tsx`
-Tarjeta que muestra información resumida de un vault.
+Tarjeta que muestra información resumida de un vault (versión pública).
 
 **Props**:
 ```typescript
