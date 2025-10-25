@@ -40,7 +40,7 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
   )
 
   // Get existing sub-vault address
-  const { data: existingSubVault } = useGetDateVault(
+  const { data: existingSubVault, refetch: refetchSubVault } = useGetDateVault(
     vaultId,
     selectedDates ? dateToTimestamp(selectedDates.checkIn) : 0,
     selectedDates ? dateToTimestamp(selectedDates.checkOut) : 0
@@ -91,15 +91,22 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
         // Dates are available, proceed to create/get sub-vault
         if (existingSubVault && existingSubVault !== '0x0000000000000000000000000000000000000000') {
           // Sub-vault already exists
+          console.log('✅ Sub-vault already exists:', existingSubVault)
           setSubVaultAddress(existingSubVault as string)
           setCurrentStep('approve-pyusd')
         } else {
           // Need to create sub-vault
+          console.log('🏗️ Creating new sub-vault for dates:', {
+            vaultId,
+            checkIn: dateToTimestamp(selectedDates.checkIn),
+            checkOut: dateToTimestamp(selectedDates.checkOut)
+          })
           await getOrCreateDateVault(
             vaultId,
             dateToTimestamp(selectedDates.checkIn),
             dateToTimestamp(selectedDates.checkOut)
           )
+          console.log('✅ Sub-vault creation transaction submitted')
         }
       } else {
         setError('Selected dates are not available. Please choose different dates.')
@@ -107,18 +114,29 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
       }
     } catch (err) {
       setError('Failed to check availability. Please try again.')
-      console.error('Availability check error:', err)
+      console.error('❌ Availability check error:', err)
     }
   }
 
   const handleApprovePYUSD = async () => {
-    if (!subVaultAddress) return
+    if (!subVaultAddress) {
+      setError('Sub-vault address not found. Please try again from the start.')
+      console.error('Missing sub-vault address for approval')
+      return
+    }
+
+    console.log('🔍 Approving PYUSD:', {
+      amount: basePrice.toString(),
+      spender: subVaultAddress,
+      owner: address
+    })
 
     try {
       await approvePYUSD(basePrice)
+      console.log('✅ PYUSD approval transaction submitted')
     } catch (err) {
-      setError('Failed to approve PYUSD. Please try again.')
-      console.error('PYUSD approval error:', err)
+      setError('Failed to approve PYUSD. Please check your wallet and try again.')
+      console.error('❌ PYUSD approval error:', err)
     }
   }
 
@@ -137,12 +155,34 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
     }
   }
 
-  // Handle transaction confirmations
-  if (isFactoryConfirmed && currentStep === 'check-availability') {
-    // Sub-vault created, now get its address
-    // This would typically be handled by watching for events or refetching
-    setCurrentStep('approve-pyusd')
-  }
+  // Handle transaction confirmations - Get sub-vault address after creation
+  useEffect(() => {
+    if (isFactoryConfirmed && currentStep === 'check-availability' && selectedDates) {
+      console.log('🔄 Factory transaction confirmed, fetching sub-vault address...')
+      // Sub-vault was just created, fetch its address
+      const checkSubVault = async () => {
+        // Wait a bit for the blockchain to update
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Refetch the sub-vault address
+        console.log('🔍 Refetching sub-vault address...')
+        const result = await refetchSubVault()
+        
+        console.log('📦 Refetch result:', result.data)
+        
+        if (result.data && result.data !== '0x0000000000000000000000000000000000000000') {
+          console.log('✅ Sub-vault address captured:', result.data)
+          setSubVaultAddress(result.data as string)
+          setCurrentStep('approve-pyusd')
+        } else {
+          console.error('❌ Sub-vault address not found after creation')
+          setError('Sub-vault created but address not found. Please try again.')
+          setCurrentStep('select-dates')
+        }
+      }
+      checkSubVault()
+    }
+  }, [isFactoryConfirmed, currentStep, selectedDates, refetchSubVault])
 
   if (isApproveConfirmed && currentStep === 'approve-pyusd') {
     setCurrentStep('create-reservation')
@@ -218,14 +258,24 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
               <p className="text-yellow-700">
                 Approve {(Number(basePrice) / 1e6).toLocaleString()} PYUSD for the booking
               </p>
+              {subVaultAddress && (
+                <p className="text-xs text-yellow-600 mt-2 font-mono break-all">
+                  Sub-vault: {subVaultAddress}
+                </p>
+              )}
+              {!subVaultAddress && (
+                <p className="text-xs text-red-600 mt-2">
+                  ⚠️ Waiting for sub-vault address...
+                </p>
+              )}
             </div>
 
             <Button
               onClick={handleApprovePYUSD}
-              disabled={isApprovePending}
+              disabled={isApprovePending || !subVaultAddress}
               className="w-full"
             >
-              {isApprovePending ? 'Approving...' : 'Approve PYUSD'}
+              {isApprovePending ? 'Approving...' : !subVaultAddress ? 'Waiting...' : 'Approve PYUSD'}
             </Button>
           </div>
         )
