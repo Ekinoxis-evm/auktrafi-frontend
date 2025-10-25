@@ -88,7 +88,8 @@ export default function LandingPage() {
 
         {/* Info Text */}
         <p className="mt-8 text-white/70 text-sm animate-fade-in-up delay-800">
-          Powered by <span className="font-bold">PYUSD</span> on <span className="font-bold">Ethereum</span> & <span className="font-bold">Arbitrum</span>
+          Powered by <span className="font-bold">PYUSD and Hardhat</span>. <br />
+          Currently deployed on <span className="font-bold">Ethereum</span> & <span className="font-bold">Arbitrum</span>
         </p>
       </div>
 

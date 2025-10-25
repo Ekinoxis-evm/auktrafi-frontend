@@ -2,6 +2,40 @@
 
 Plataforma descentralizada para gestionar propiedades tokenizadas con sistema de reservas y subastas en blockchain.
 
+## 🎉 Recent Updates (October 2025)
+
+### ✨ Authentication & Landing Page
+- 🆕 **New Landing Page**: Beautiful "Go to App" entry point with Privy authentication
+- 🔒 **AuthGuard Component**: All app pages now protected with authentication
+- ♻️ **Auto-redirect**: Authenticated users go straight to /marketplace
+- 🎨 **Animated UI**: Gradient background, smooth transitions, fade-in effects
+
+### 🏗️ Ownerships Improvements  
+- ⚡ **Performance**: Now uses `getOwnerVaults()` directly from factory contract
+- 🚀 **Faster Loading**: No manual filtering needed
+- 🎯 **Accurate**: Shows only vaults owned by connected wallet
+- 💫 **Loading States**: Better UX with skeleton loaders
+
+### 📋 Navigation Updates
+- 🔄 **Renamed**: `/reserves` → `/reservations` for consistency
+- 👤 **Profile in Navbar**: Profile page now accessible from navigation
+- 💼 **Wallet Display**: Shows connected address in navbar (desktop)
+- 📱 **Mobile Optimized**: Compact nav with icons for small screens
+
+### 🔑 Access Code
+- ✅ **Already Implemented**: Captures access code after check-in
+- 📺 **Prominent Display**: Shows 6-digit code with copy/share options
+- 🎯 **User-friendly**: Clear instructions and visual feedback
+
+### 🗺️ Current Routes
+- ✅ `/` - Landing Page (public)
+- 🔒 `/marketplace` - Browse vaults (protected)
+- 🔒 `/ownerships` - Manage properties (protected)
+- 🔒 `/reservations` - View bookings (protected)
+- 🔒 `/profile` - User profile (protected)
+
+---
+
 ## 📋 Tabla de Contenidos
 
 - [Descripción General](#descripción-general)
@@ -65,33 +99,35 @@ Auktrafi es una aplicación Web3 que permite a los usuarios:
 ```
 digitalhouse-frontend/
 ├── src/
-│   ├── app/                      # Rutas de Next.js App Router
-│   │   ├── layout.tsx           # Layout raíz
-│   │   ├── page.tsx             # Landing page
-│   │   ├── marketplace/         # Marketplace de vaults
-│   │   │   ├── page.tsx        # Lista de vaults (MarketplacePage)
-│   │   │   └── [vaultId]/      # Detalle de vault
-│   │   │       └── page.tsx    # VaultDetailPage
-│   │   ├── ownerships/          # Propiedades del usuario
-│   │   │   └── page.tsx        # OwnershipsPage
-│   │   ├── reserves/            # Reservas del usuario
-│   │   │   └── page.tsx        # ReservesPage
-│   │   └── profile/             # Perfil de usuario
-│   │       └── page.tsx        # ProfilePage
+│   ├── app/                        # Rutas de Next.js App Router
+│   │   ├── layout.tsx             # Layout raíz con providers
+│   │   ├── page.tsx               # 🆕 Landing page con "Go to App"
+│   │   ├── marketplace/           # 🔒 Marketplace de vaults (protected)
+│   │   │   ├── page.tsx          # Lista de vaults (MarketplacePage)
+│   │   │   └── [vaultId]/        # 🔒 Detalle de vault (protected)
+│   │   │       └── page.tsx      # VaultDetailPage
+│   │   ├── ownerships/            # 🔒 Propiedades del usuario (protected)
+│   │   │   └── page.tsx          # ⭐ OwnershipsPage (improved)
+│   │   ├── reservations/          # 🔒 Reservas del usuario (protected)
+│   │   │   └── page.tsx          # 🔄 ReservationsPage (renamed)
+│   │   └── profile/               # 🔒 Perfil de usuario (protected)
+│   │       └── page.tsx          # ⭐ ProfilePage (now in navbar)
 │   │
-│   ├── components/              # Componentes React
-│   │   ├── ui/                  # Componentes UI básicos
+│   ├── components/                # Componentes React
+│   │   ├── ui/                    # Componentes UI básicos
 │   │   │   └── Button.tsx
-│   │   ├── vault/               # Componentes de vaults
+│   │   ├── vault/                 # Componentes de vaults
 │   │   │   ├── VaultCard.tsx
+│   │   │   ├── OwnerVaultCard.tsx # 🆕 Card para owners
 │   │   │   ├── ReservationFlow.tsx
 │   │   │   └── AuctionFlow.tsx
-│   │   ├── Layout.tsx           # Layout con navbar/footer
-│   │   ├── WalletConnect.tsx    # Botón de conexión de wallet
-│   │   ├── NetworkSwitcher.tsx  # Selector de red
-│   │   ├── CreateVault.tsx      # Formulario crear vault
-│   │   ├── BalanceCard.tsx      # Tarjeta de balances
-│   │   └── FundWallet.tsx       # Opciones de fondeo
+│   │   ├── AuthGuard.tsx          # 🆕 Authentication guard
+│   │   ├── Layout.tsx             # ⭐ Layout con auth & navbar
+│   │   ├── WalletConnect.tsx      # Botón de conexión de wallet
+│   │   ├── NetworkSwitcher.tsx    # Selector de red
+│   │   ├── CreateVault.tsx        # Formulario crear vault
+│   │   ├── BalanceCard.tsx        # Tarjeta de balances
+│   │   └── FundWallet.tsx         # Opciones de fondeo
 │   │
 │   ├── hooks/                   # Hooks personalizados
 │   │   ├── useDigitalHouseFactory.ts
@@ -125,16 +161,33 @@ digitalhouse-frontend/
 
 ## 📄 Páginas
 
-### 🏠 Landing Page (`/`)
+### 🏠 Landing Page (`/`) - **PUBLIC**
 **Componente**: `page.tsx`
 
-Página de inicio con navegación a las secciones principales:
-- Links a Marketplace
-- Links a Ownerships (si está conectado)
-- Botón de conexión de wallet
+**Nueva landing page de autenticación con "Go to App"**:
+- Diseño moderno con gradientes y animaciones
+- Botón principal "Go to App"
+- Trigger de autenticación Privy
+- Auto-redirect a `/marketplace` si ya está autenticado
+- Features grid mostrando las capacidades de la app
 
-### 🏆 Marketplace (`/marketplace`)
+**Flujo de autenticación**:
+1. Usuario ve landing page
+2. Click en "Go to App"
+3. Modal de Privy para login/signup
+4. Redirect automático a `/marketplace`
+
+**Características**:
+- 🎨 Gradiente animado de fondo
+- 📱 Completamente responsive
+- 🔐 Integración con Privy Auth
+- ✨ Animaciones suaves (fade-in, slide-up)
+- 🏗️ 📋 🏆 Feature cards
+
+### 🏆 Marketplace (`/marketplace`) - **PROTECTED**
 **Componente**: `MarketplacePage`
+
+**⚠️ Requires Authentication**: Wrapped with `AuthGuard`
 
 **Características**:
 - Lista todos los vaults disponibles
@@ -148,8 +201,10 @@ Página de inicio con navegación a las secciones principales:
 - Estado actual (FREE/AUCTION/OCCUPIED)
 - Precio base en PYUSD
 
-### 📋 Detalle de Vault (`/marketplace/[vaultId]`)
+### 📋 Detalle de Vault (`/marketplace/[vaultId]`) - **PROTECTED**
 **Componente**: `VaultDetailPage`
+
+**⚠️ Requires Authentication**: Wrapped with `AuthGuard` via Layout
 
 **Información del Vault**:
 - ID y dirección del vault
@@ -186,14 +241,23 @@ Página de inicio con navegación a las secciones principales:
    - Mensaje de propiedad ocupada
    - No permite acciones
 
-### 🏗️ My Properties (`/ownerships`)
+### 🏗️ Ownerships (`/ownerships`) - **PROTECTED**
 **Componente**: `OwnershipsPage`
+
+**⚠️ Requires Authentication**: Wrapped with `AuthGuard` via Layout
+
+**🎯 NUEVA IMPLEMENTACIÓN**:
+- Usa `getOwnerVaults(address)` directamente del factory contract
+- No requiere filtrado manual
+- Carga solo los vaults del usuario conectado
+- Performance mejorado
 
 **Características**:
 - 💼 **Wallet Address Display**: Muestra la wallet conectada con botón de copia rápida
 - 🏗️ **Create Vault Form**: Formulario completo con tooltips explicativos
-- 📋 **Properties List**: Muestra solo vaults donde el usuario es owner
-- 🔍 **Debug Logging**: Console logs para troubleshooting de ownership
+- 📋 **Properties List**: Cargada directamente desde el contrato
+- ⏳ **Loading States**: Muestra skeleton mientras carga
+- 🏘️ **Empty State**: Mensaje amigable si no hay properties
 
 **Wallet Address Section**:
 ```typescript
@@ -212,15 +276,24 @@ Página de inicio con navegación a las secciones principales:
   - 💼 Botón "Use My Wallet" para auto-rellenar con wallet conectada
   - 📋 Hint: "Use the address shown at the top to receive payments"
 
-**Filtrado Inteligente**:
-- Solo muestra vaults donde `owner.toLowerCase() === userAddress.toLowerCase()`
-- Debug logging en consola para verificar ownership
-- Mensajes claros si no hay vaults:
-  - "🏘️ No properties yet"
-  - "Create your first vault to get started"
+**Implementación**:
+```typescript
+const { useOwnerVaults } = useDigitalHouseFactory()
+const { data: ownerVaultIds } = useOwnerVaults(address || '')
+// Returns only vaults owned by the user
+```
 
-### 📋 My Reservations (`/reserves`)
-**Componente**: `ReservesPage`
+**Estados visuales**:
+- ⏳ Loading: "Loading your properties..."
+- 🏘️ Empty: "No properties yet - Create your first vault"
+- ✅ Loaded: Grid de OwnerVaultCard components
+
+### 📋 Reservations (`/reservations`) - **PROTECTED**
+**Componente**: `ReservationsPage` (formerly ReservesPage)
+
+**⚠️ Requires Authentication**: Wrapped with `AuthGuard` via Layout
+
+**🔄 RENAMED**: `/reserves` → `/reservations` para consistencia
 
 **Características**:
 - Muestra vaults donde el usuario está participando
@@ -238,8 +311,12 @@ Usuario aparece si:
 - Maneja tanto formato array como object de contratos
 - Debug logs para troubleshooting
 
-### 👤 Profile (`/profile`)
+### 👤 Profile (`/profile`) - **PROTECTED**
 **Componente**: `ProfilePage`
+
+**⚠️ Requires Authentication**: Wrapped with `AuthGuard` via Layout
+
+**✨ NOW IN NAVBAR**: Accessible via navbar link "👤 Profile"
 
 **Información del Usuario**:
 - Email de autenticación
@@ -263,7 +340,92 @@ Usuario aparece si:
 
 ---
 
+## 🔐 Sistema de Autenticación
+
+### AuthGuard Component
+**Archivo**: `src/components/AuthGuard.tsx`
+
+**Propósito**: Proteger rutas y garantizar que solo usuarios autenticados accedan a las páginas de la app.
+
+**Funcionalidad**:
+```typescript
+- Verifica autenticación con Privy (ready & authenticated)
+- Redirige a landing (/) si no está autenticado
+- Muestra loading state mientras verifica
+- Permite acceso si está autenticado
+```
+
+**Estados**:
+1. **Loading**: `!ready` → Muestra spinner "Loading..."
+2. **Redirecting**: `ready && !authenticated` → "Redirecting to login..."
+3. **Authenticated**: `ready && authenticated` → Renderiza children
+
+**Uso**:
+```typescript
+<AuthGuard>
+  <YourProtectedContent />
+</AuthGuard>
+```
+
+**Integración**:
+- Envuelve el contenido en `Layout.tsx`
+- Todas las páginas con Layout están protegidas
+- Landing page (`/`) NO usa Layout (pública)
+
+### Flujo de Autenticación Completo
+
+```
+┌─────────────────────────────────────────┐
+│  1. Usuario visita /                    │
+│     → Landing Page (pública)            │
+│     → Muestra "Go to App" button        │
+└─────────────────┬───────────────────────┘
+                  │
+                  ▼ Click "Go to App"
+┌─────────────────────────────────────────┐
+│  2. Privy Login Modal                   │
+│     → Email, Google, Phone, etc.        │
+│     → Crea/Conecta wallet               │
+└─────────────────┬───────────────────────┘
+                  │
+                  ▼ Authenticated
+┌─────────────────────────────────────────┐
+│  3. Redirect to /marketplace            │
+│     → AuthGuard permite acceso          │
+│     → Navbar visible                    │
+│     → Wallet conectada                  │
+└─────────────────┬───────────────────────┘
+                  │
+                  ▼ Navegación
+┌─────────────────────────────────────────┐
+│  4. App Pages (todas protegidas)       │
+│     → /marketplace                      │
+│     → /ownerships                       │
+│     → /reservations                     │
+│     → /profile                          │
+└─────────────────────────────────────────┘
+```
+
+### Páginas Públicas vs Protegidas
+
+**Públicas** (No requieren auth):
+- ✅ `/` - Landing Page
+
+**Protegidas** (Requieren auth via AuthGuard):
+- 🔒 `/marketplace` - Ver properties
+- 🔒 `/ownerships` - Gestionar properties
+- 🔒 `/reservations` - Ver reservas
+- 🔒 `/profile` - Perfil usuario
+- 🔒 `/marketplace/[vaultId]` - Detalle vault
+
+---
+
 ## 🧩 Componentes
+
+### 🔐 Componentes de Autenticación
+
+#### `AuthGuard.tsx`
+Ya documentado en la sección de Sistema de Autenticación ↑
 
 ### 🎨 Componentes de UI
 
@@ -544,34 +706,57 @@ address for easy access to your earnings.
 
 ### 📐 Componentes de Layout
 
-#### `Layout.tsx`
-Layout unificado con navbar y footer.
+#### `Layout.tsx` ⭐ UPDATED
+Layout unificado con navbar, AuthGuard y wallet display.
+
+**🔒 INCLUYE AuthGuard**: Todas las páginas que usan Layout están protegidas
 
 **Estructura**:
 ```
-┌─────────────────────────────┐
-│         HEADER              │
-│  Logo | Nav | Network | Wallet │
-├─────────────────────────────┤
-│                             │
-│         CONTENT             │
-│        (children)           │
-│                             │
-├─────────────────────────────┤
-│         FOOTER              │
-│    Links | Copyright        │
-└─────────────────────────────┘
+┌──────────────────────────────────────┐
+│         HEADER (Sticky)              │
+│  Logo | Nav | WalletAddr | Connect   │
+├──────────────────────────────────────┤
+│                                      │
+│      CONTENT (children)              │
+│      Protected by AuthGuard          │
+│                                      │
+└──────────────────────────────────────┘
 ```
 
-**Navigation**:
-- My Properties
-- My Reservations
-- Marketplace
-- Profile
+**Navigation Links**:
+- 🏗️ **Ownerships** → `/ownerships`
+- 📋 **Reservations** → `/reservations` (renamed from Reserves)
+- 🏆 **Marketplace** → `/marketplace`
+- 👤 **Profile** → `/profile` (NEW in navbar)
 
 **Header Derecha**:
-- NetworkSwitcher (si conectado)
-- WalletConnect
+1. **Wallet Address Display** (Desktop only):
+   ```
+   Connected
+   0x123...abc
+   ```
+2. **WalletConnect Button**: Connect/Disconnect
+
+**Mobile Navigation**:
+- Icons + short labels
+- 4 links: Own | Book | Market | Profile
+- Compact design for small screens
+
+**Props**:
+```typescript
+{
+  children: React.ReactNode
+}
+```
+
+**Características**:
+- ✅ Sticky header (top: 0, z-50)
+- ✅ Backdrop blur effect
+- ✅ Auth protection via AuthGuard
+- ✅ Wallet address display (desktop)
+- ✅ Responsive navigation
+- ✅ Profile link en navbar
 
 ---
 

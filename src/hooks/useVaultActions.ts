@@ -4,6 +4,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import DigitalHouseVaultABI from '@/contracts/DigitalHouseVault.json'
 import { Address } from 'viem'
 import { useState, useEffect } from 'react'
+import { useAccessCode } from './useAccessCode'
 
 export function useVaultActions(vaultAddress: Address) {
   const { 
@@ -16,7 +17,7 @@ export function useVaultActions(vaultAddress: Address) {
   const { isLoading: isConfirming, isSuccess: isConfirmed, data: receipt } = 
     useWaitForTransactionReceipt({ hash })
   
-  const [accessCode, setAccessCode] = useState<string | null>(null)
+  const { accessCode, saveAccessCode, clearAccessCode: clearStoredAccessCode } = useAccessCode(vaultAddress)
   const [isCheckInTransaction, setIsCheckInTransaction] = useState(false)
 
   const createReservation = async (
@@ -60,7 +61,7 @@ export function useVaultActions(vaultAddress: Address) {
   }
 
   const checkIn = async () => {
-    setAccessCode(null) // Reset previous access code
+    clearStoredAccessCode() // Clear any previous access code
     setIsCheckInTransaction(true) // Mark this as a check-in transaction
     
     const result = writeContract({
@@ -101,10 +102,12 @@ export function useVaultActions(vaultAddress: Address) {
             const hashSuffix = hash.slice(-6) // Last 6 chars of tx hash
             const numericCode = parseInt(hashSuffix, 16) % 1000000 // Convert to number and mod 1000000
             const simulatedAccessCode = numericCode.toString().padStart(6, '0') // Ensure 6 digits
-            setAccessCode(simulatedAccessCode)
+            
+            // Save to localStorage for persistence
+            saveAccessCode(simulatedAccessCode)
             setIsCheckInTransaction(false) // Reset the flag
             
-            console.log('✅ Check-in successful! Access code generated:', simulatedAccessCode)
+            console.log('✅ Check-in successful! Access code saved:', simulatedAccessCode)
           }
         } catch (error) {
           console.error('Error extracting access code from receipt:', error)
@@ -113,15 +116,18 @@ export function useVaultActions(vaultAddress: Address) {
             const hashSuffix = hash.slice(-6)
             const numericCode = parseInt(hashSuffix, 16) % 1000000
             const fallbackCode = numericCode.toString().padStart(6, '0')
-            setAccessCode(fallbackCode)
+            saveAccessCode(fallbackCode)
             setIsCheckInTransaction(false) // Reset the flag
           }
         }
       }, 100) // Small delay to avoid synchronous setState
     }
-  }, [isConfirmed, receipt, hash, isCheckInTransaction])
+  }, [isConfirmed, receipt, hash, isCheckInTransaction, saveAccessCode])
 
   const checkOut = async () => {
+    // Clear access code when checking out
+    clearStoredAccessCode()
+    
     return writeContract({
       address: vaultAddress,
       abi: DigitalHouseVaultABI.abi,
@@ -151,7 +157,7 @@ export function useVaultActions(vaultAddress: Address) {
     hash,
     error,
     accessCode,
-    clearAccessCode: () => setAccessCode(null),
+    clearAccessCode: clearStoredAccessCode,
   }
 }
 
