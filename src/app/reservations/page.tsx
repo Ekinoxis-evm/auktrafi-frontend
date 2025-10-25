@@ -101,13 +101,13 @@ export default function ReservationsPage() {
 function UserReservationVault({ vaultId, userAddress }: { vaultId: string; userAddress: `0x${string}` }) {
   const { useVaultAddress } = useDigitalHouseFactory()
   const { data: vaultAddress, isLoading: isLoadingAddress } = useVaultAddress(vaultId)
-  const { isParticipating, isLoading: isCheckingParticipation } = useUserVaultParticipation(
+  const { isParticipating } = useUserVaultParticipation(
     vaultAddress as `0x${string}`,
     userAddress
   )
 
   // Don't render if still loading
-  if (isLoadingAddress || isCheckingParticipation) {
+  if (isLoadingAddress) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
