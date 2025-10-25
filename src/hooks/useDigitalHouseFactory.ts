@@ -46,44 +46,17 @@ export function useDigitalHouseFactory() {
     })
   }
 
-  // Get or create date vault (Sub-Vault System - Date Range)
-  const getOrCreateDateVault = async (
+  // Night Vault System - Create or get a night sub-vault for booking
+  const getOrCreateNightVault = async (
     parentVaultId: string,
-    checkInDate: number,
-    checkOutDate: number
-  ) => {
-    return writeContract({
-      address: contractAddress,
-      abi: DigitalHouseFactoryABI,
-      functionName: 'getOrCreateDateVault',
-      args: [parentVaultId, checkInDate, checkOutDate],
-    })
-  }
-
-  // Daily Vault System functions
-  const getOrCreateDailyVault = async (
-    parentVaultId: string,
-    dayTimestamp: number,
+    nightTimestamp: number,
     masterAccessCode: string
   ) => {
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
-      functionName: 'getOrCreateDailyVault',
-      args: [parentVaultId, dayTimestamp, masterAccessCode],
-    })
-  }
-
-  const createMultiDayReservation = async (
-    parentVaultId: string,
-    dayTimestamps: number[],
-    masterAccessCode: string
-  ) => {
-    return writeContract({
-      address: contractAddress,
-      abi: DigitalHouseFactoryABI,
-      functionName: 'createMultiDayReservation',
-      args: [parentVaultId, dayTimestamps, masterAccessCode],
+      functionName: 'getOrCreateNightVault',
+      args: [parentVaultId, BigInt(nightTimestamp), masterAccessCode],
     })
   }
 
@@ -154,24 +127,36 @@ export function useDigitalHouseFactory() {
     })
   }
 
-  // Daily Vault System hooks
-  const useGetDailySubVault = (vaultId: string, dayTimestamp: number) => {
+  // Night Vault System hooks - Query functions
+  const useNightAvailability = (vaultId: string, nightTimestamp: number) => {
     return useReadContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
-      functionName: 'getDailySubVault',
-      args: [vaultId, dayTimestamp],
+      functionName: 'getNightAvailability',
+      args: [vaultId, BigInt(nightTimestamp)],
       query: {
-        enabled: !!contractAddress && !!vaultId && dayTimestamp > 0,
+        enabled: !!contractAddress && !!vaultId && nightTimestamp > 0,
       },
     })
   }
 
-  const useGetDailySubVaultsInfo = (vaultId: string) => {
+  const useGetNightSubVault = (vaultId: string, nightTimestamp: number) => {
     return useReadContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
-      functionName: 'getDailySubVaultsInfo',
+      functionName: 'getNightSubVault',
+      args: [vaultId, BigInt(nightTimestamp)],
+      query: {
+        enabled: !!contractAddress && !!vaultId && nightTimestamp > 0,
+      },
+    })
+  }
+
+  const useGetNightSubVaultsInfo = (vaultId: string) => {
+    return useReadContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI,
+      functionName: 'getNightSubVaultsInfo',
       args: [vaultId],
       query: {
         enabled: !!contractAddress && !!vaultId,
@@ -190,9 +175,7 @@ export function useDigitalHouseFactory() {
     
     // Write functions
     createVault,
-    getOrCreateDateVault,
-    getOrCreateDailyVault,
-    createMultiDayReservation,
+    getOrCreateNightVault,
     isPending,
     isConfirming,
     isConfirmed,
@@ -203,14 +186,15 @@ export function useDigitalHouseFactory() {
     useVaultAddress,
     useOwnerVaults,
     
-    // Sub-Vault System hooks (Date Range)
+    // Night Vault System hooks
+    useNightAvailability,
+    useGetNightSubVault,
+    useGetNightSubVaultsInfo,
+    
+    // Legacy hooks (for compatibility, may be removed)
+    useGetParentVault,
     useDateAvailability,
     useGetDateVault,
-    useGetParentVault,
-    
-    // Daily Vault System hooks
-    useGetDailySubVault,
-    useGetDailySubVaultsInfo,
   }
 }
 

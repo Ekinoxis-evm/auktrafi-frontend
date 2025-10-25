@@ -6,7 +6,8 @@ import DigitalHouseFactoryABI from '@/contracts/DigitalHouseFactory.json'
 import { dateToTimestamp } from '@/config/wagmi'
 
 /**
- * Hook for creating daily reservations and managing bookings
+ * Hook for creating night reservations and managing bookings
+ * Uses getOrCreateNightVault for each individual night
  */
 export function useDailyVaultActions(parentVaultId: string) {
   const chainId = useChainId()
@@ -23,8 +24,8 @@ export function useDailyVaultActions(parentVaultId: string) {
     useWaitForTransactionReceipt({ hash })
 
   /**
-   * Create a reservation for a single day
-   * @param date The date to book
+   * Create a reservation for a single night
+   * @param date The night to book
    * @param masterCode Master access code from parent vault
    */
   const createSingleDayBooking = async (date: Date, masterCode: string) => {
@@ -32,25 +33,26 @@ export function useDailyVaultActions(parentVaultId: string) {
       throw new Error('Contract address not found for current chain')
     }
 
-    const dayTimestamp = dateToTimestamp(date)
+    const nightTimestamp = dateToTimestamp(date)
 
-    console.log('📅 Creating single day booking:', {
+    console.log('🌙 Creating single night booking:', {
       vaultId: parentVaultId,
       date: date.toDateString(),
-      timestamp: dayTimestamp,
+      timestamp: nightTimestamp,
     })
 
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
-      functionName: 'getOrCreateDailyVault',
-      args: [parentVaultId, dayTimestamp, masterCode],
+      functionName: 'getOrCreateNightVault',
+      args: [parentVaultId, BigInt(nightTimestamp), masterCode],
     })
   }
 
   /**
-   * Create reservations for multiple days at once
-   * @param dates Array of dates to book
+   * Create reservations for multiple nights
+   * NOTE: Must be called sequentially for each night
+   * @param dates Array of nights to book
    * @param masterCode Master access code from parent vault
    */
   const createMultiDayBooking = async (dates: Date[], masterCode: string) => {
@@ -62,22 +64,26 @@ export function useDailyVaultActions(parentVaultId: string) {
       throw new Error('No dates selected')
     }
 
-    // Convert dates to timestamps
-    const dayTimestamps = dates.map(date => dateToTimestamp(date))
-
-    console.log('📅 Creating multi-day booking:', {
+    console.log('🌙 Creating multi-night booking:', {
       vaultId: parentVaultId,
       dates: dates.map(d => d.toDateString()),
-      timestamps: dayTimestamps,
       count: dates.length,
     })
 
-    return writeContract({
-      address: contractAddress,
-      abi: DigitalHouseFactoryABI,
-      functionName: 'createMultiDayReservation',
-      args: [parentVaultId, dayTimestamps, masterCode],
-    })
+    // Book each night sequentially
+    const results = []
+    for (const date of dates) {
+      const nightTimestamp = dateToTimestamp(date)
+      const result = await writeContract({
+        address: contractAddress,
+        abi: DigitalHouseFactoryABI,
+        functionName: 'getOrCreateNightVault',
+        args: [parentVaultId, BigInt(nightTimestamp), masterCode],
+      })
+      results.push(result)
+    }
+
+    return results[results.length - 1] // Return last transaction hash
   }
 
   return {

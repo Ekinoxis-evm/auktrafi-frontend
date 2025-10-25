@@ -46,20 +46,20 @@ export function useAvailabilityManagement(vaultId: string) {
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
       functionName: 'setNightAvailability',
-      args: [vaultId, nightTimestamp, isAvailable],
+      args: [vaultId, BigInt(nightTimestamp), isAvailable],
     })
   }
 
   /**
    * Set availability for a range of nights (bulk operation)
+   * NOTE: This function ONLY opens nights for booking (sets them as available)
+   * To block nights, use setNightAvailability individually
    * @param startNight Start date of the range
    * @param endNight End date of the range
-   * @param isAvailable Whether all nights in the range should be available
    */
   const setAvailabilityWindow = async (
     startNight: Date,
-    endNight: Date,
-    isAvailable: boolean
+    endNight: Date
   ) => {
     if (!contractAddress) {
       throw new Error('Contract address not found for current chain')
@@ -71,41 +71,38 @@ export function useAvailabilityManagement(vaultId: string) {
     // Calculate number of nights
     const nightCount = Math.floor((endTimestamp - startTimestamp) / (24 * 60 * 60)) + 1
 
-    console.log('📅 Setting availability window:', {
+    console.log('📅 Opening availability window:', {
       vaultId,
       startDate: startNight.toDateString(),
       endDate: endNight.toDateString(),
       nightCount,
-      isAvailable,
+      note: 'This ONLY opens nights (makes them available)',
     })
 
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
       functionName: 'setAvailabilityWindow',
-      args: [vaultId, startTimestamp, endTimestamp, nightCount, isAvailable],
+      args: [vaultId, BigInt(startTimestamp), BigInt(endTimestamp), BigInt(nightCount)],
     })
   }
 
   /**
    * Convenience method: Block specific nights
+   * NOTE: Blocking must be done individually per night
    */
   const blockNights = async (nights: Date[]) => {
-    console.log('🚫 Blocking nights:', nights.map(d => d.toDateString()))
+    console.log('🚫 Blocking nights (individual calls):', nights.map(d => d.toDateString()))
     
-    // For multiple nights, we could batch them
-    // For now, setting first night as example
-    if (nights.length === 1) {
-      return setNightAvailability(nights[0], false)
-    } else if (nights.length > 1) {
-      // Use window for multiple consecutive nights
-      const sortedNights = nights.sort((a, b) => a.getTime() - b.getTime())
-      return setAvailabilityWindow(sortedNights[0], sortedNights[sortedNights.length - 1], false)
+    // Block each night individually
+    for (const night of nights) {
+      await setNightAvailability(night, false)
     }
   }
 
   /**
    * Convenience method: Open specific nights for booking
+   * Uses bulk window operation if multiple consecutive nights
    */
   const openNights = async (nights: Date[]) => {
     console.log('✅ Opening nights:', nights.map(d => d.toDateString()))
@@ -113,8 +110,9 @@ export function useAvailabilityManagement(vaultId: string) {
     if (nights.length === 1) {
       return setNightAvailability(nights[0], true)
     } else if (nights.length > 1) {
+      // Use window for multiple consecutive nights (more gas efficient)
       const sortedNights = nights.sort((a, b) => a.getTime() - b.getTime())
-      return setAvailabilityWindow(sortedNights[0], sortedNights[sortedNights.length - 1], true)
+      return setAvailabilityWindow(sortedNights[0], sortedNights[sortedNights.length - 1])
     }
   }
 
