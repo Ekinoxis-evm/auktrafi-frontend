@@ -2,7 +2,6 @@
 
 import { useAccount } from 'wagmi'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
-import { useVaultInfo } from '@/hooks/useVaultInfo'
 import { CreateVault } from '@/components/CreateVault'
 import { OwnerVaultCard } from '@/components/vault/OwnerVaultCard'
 import { Layout } from '@/components/Layout'
@@ -11,20 +10,27 @@ import { useMemo } from 'react'
 
 export default function OwnershipsPage() {
   const { address, isConnected } = useAccount()
-  const { allVaultIds } = useDigitalHouseFactory()
+  const { useOwnerVaults } = useDigitalHouseFactory()
+  
+  // Get vaults owned by the connected user directly from contract
+  const { data: ownerVaultIds, isLoading: isLoadingVaults } = useOwnerVaults(address || '')
 
-  // Get all vaults - we'll filter by owner in the component
+  // Parse and filter valid vault IDs
   const allVaults = useMemo(() => {
-    if (!allVaultIds || !Array.isArray(allVaultIds) || !address) return []
+    if (!ownerVaultIds || !address) return []
     
-    return allVaultIds.filter((vaultId: string | unknown) => {
-      try {
-        return typeof vaultId === 'string' && vaultId.length > 0
-      } catch {
-        return false
-      }
-    })
-  }, [allVaultIds, address])
+    // Handle both array and object formats
+    let vaultIds: unknown[] = []
+    if (Array.isArray(ownerVaultIds)) {
+      vaultIds = ownerVaultIds
+    } else if (typeof ownerVaultIds === 'object') {
+      vaultIds = Object.values(ownerVaultIds)
+    }
+    
+    return vaultIds.filter((vaultId: unknown) => {
+      return typeof vaultId === 'string' && vaultId.length > 0
+    }) as string[]
+  }, [ownerVaultIds, address])
 
   if (!isConnected) {
     return (
@@ -100,7 +106,14 @@ export default function OwnershipsPage() {
                 📋 Your Properties
               </h3>
 
-              {allVaults.length === 0 ? (
+              {isLoadingVaults ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4 animate-pulse">⏳</div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-2">
+                    Loading your properties...
+                  </h4>
+                </div>
+              ) : allVaults.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🏘️</div>
                   <h4 className="text-xl font-bold text-gray-900 mb-2">
@@ -113,7 +126,7 @@ export default function OwnershipsPage() {
               ) : (
                 <div className="grid gap-6">
                   {allVaults.map((vaultId: string) => (
-                    <OwnershipVaultCard key={vaultId} vaultId={vaultId} userAddress={address as `0x${string}`} />
+                    <OwnershipVaultCard key={vaultId} vaultId={vaultId} />
                   ))}
                 </div>
               )}
@@ -125,44 +138,23 @@ export default function OwnershipsPage() {
   )
 }
 
-// Component to display each vault with owner check
-function OwnershipVaultCard({ vaultId, userAddress }: { vaultId: string; userAddress: `0x${string}` }) {
+// Component to display each vault - gets vault address then shows card
+function OwnershipVaultCard({ vaultId }: { vaultId: string }) {
   const { useVaultAddress } = useDigitalHouseFactory()
-  const { data: vaultAddress } = useVaultAddress(vaultId)
+  const { data: vaultAddress, isLoading } = useVaultAddress(vaultId)
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
+        <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      </div>
+    )
+  }
 
   if (!vaultAddress) return null
 
-  return <OwnerCheckCard vaultAddress={vaultAddress as `0x${string}`} vaultId={vaultId} userAddress={userAddress} />
-}
-
-function OwnerCheckCard({ 
-  vaultAddress, 
-  vaultId, 
-  userAddress 
-}: { 
-  vaultAddress: `0x${string}`
-  vaultId: string
-  userAddress: `0x${string}`
-}) {
-  const { owner, isLoading } = useVaultInfo(vaultAddress)
-  
-  // Debug logging
-  console.log('=== OWNERSHIP CHECK ===')
-  console.log('Vault ID:', vaultId)
-  console.log('Vault Address:', vaultAddress)
-  console.log('User Address:', userAddress)
-  console.log('Owner Address:', owner)
-  console.log('Is Loading:', isLoading)
-  console.log('Owner type:', typeof owner)
-  console.log('Match:', owner && typeof owner === 'string' && owner.toLowerCase() === userAddress?.toLowerCase())
-  
-  // Only show if user is the owner
-  if (!owner || typeof owner !== 'string' || owner.toLowerCase() !== userAddress?.toLowerCase()) {
-    console.log('❌ Not owner or no match')
-    return null
-  }
-
-  console.log('✅ User is owner, showing vault')
-  return <OwnerVaultCard vaultAddress={vaultAddress} vaultId={vaultId} />
+  return <OwnerVaultCard vaultAddress={vaultAddress as `0x${string}`} vaultId={vaultId} />
 }
 
