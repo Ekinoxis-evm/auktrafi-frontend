@@ -132,6 +132,23 @@
     {
       "type": "event",
       "anonymous": false,
+      "name": "EarningsWithdrawn",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "recipient",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "amount",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
       "name": "MasterAccessCodeUpdated",
       "inputs": [
         {
@@ -160,6 +177,23 @@
           "type": "address",
           "name": "newOwner",
           "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "PaymentReceived",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "from",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "amount",
+          "indexed": false
         }
       ]
     },
@@ -411,6 +445,25 @@
     },
     {
       "type": "function",
+      "name": "earnings",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
       "name": "factoryAddress",
       "constant": true,
       "stateMutability": "view",
@@ -534,6 +587,20 @@
     },
     {
       "type": "function",
+      "name": "getEarningsBalance",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
       "name": "getMasterAccessCode",
       "constant": true,
       "stateMutability": "view",
@@ -542,6 +609,20 @@
       "outputs": [
         {
           "type": "string",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getTotalEarnings",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
           "name": ""
         }
       ]
@@ -704,11 +785,38 @@
     },
     {
       "type": "function",
+      "name": "receivePayment",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "amount"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
       "name": "renounceOwnership",
       "constant": false,
       "payable": false,
       "inputs": [],
       "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "totalEarnings",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ]
     },
     {
       "type": "function",
@@ -761,6 +869,14 @@
           "name": "_bidIndex"
         }
       ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "withdrawEarnings",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
       "outputs": []
     }
   ]

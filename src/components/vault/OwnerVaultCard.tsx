@@ -5,8 +5,10 @@ import { useVaultInfo, getVaultStateLabel, getVaultStateColor, getVaultStateIcon
 import { useReservation } from '@/hooks/useReservation'
 import { useAuction } from '@/hooks/useAuction'
 import { useAccessCodes } from '@/hooks/useAccessCodes'
+import { useDigitalHouseVault } from '@/hooks/useDigitalHouseVault'
 import { useReadContract, useChainId } from 'wagmi'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
+import { AvailabilityManager } from '@/components/owner/AvailabilityManager'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -41,10 +43,19 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
     isPending,
     isConfirming 
   } = useAccessCodes(vaultAddress)
+  
+  const { 
+    withdrawEarnings,
+    isPending: isWithdrawPending,
+    isConfirming: isWithdrawConfirming,
+    isConfirmed: isWithdrawConfirmed,
+  } = useDigitalHouseVault(vaultAddress)
+  
   const [copied, setCopied] = useState(false)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [newMasterCode, setNewMasterCode] = useState('')
   const [updateError, setUpdateError] = useState('')
+  const [showAvailabilityManager, setShowAvailabilityManager] = useState(false)
   
   const chainId = useChainId()
   const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
@@ -105,6 +116,14 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
     } catch (error) {
       console.error('Error updating master code:', error)
       setUpdateError('Failed to update code. Please try again.')
+    }
+  }
+
+  const handleWithdrawEarnings = async () => {
+    try {
+      await withdrawEarnings()
+    } catch (error) {
+      console.error('Error withdrawing earnings:', error)
     }
   }
 
@@ -361,6 +380,56 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
             </button>
           </Link>
         </div>
+      </div>
+
+      {/* Owner Actions - Withdraw & Availability */}
+      <div className="p-6 border-t-2 border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
+        <h4 className="font-bold text-gray-900 mb-4 text-lg">👑 Owner Actions</h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Withdraw Earnings */}
+          <div className="bg-white rounded-lg p-4 border-2 border-purple-200">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="font-semibold text-purple-900">💰 Total Balance</p>
+                <p className="text-2xl font-bold text-purple-800">
+                  {formatUnits(totalValueLocked, 6)} PYUSD
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleWithdrawEarnings}
+              disabled={isWithdrawPending || isWithdrawConfirming || totalValueLocked === BigInt(0)}
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all shadow-md"
+            >
+              {isWithdrawPending || isWithdrawConfirming ? '⏳ Withdrawing...' : '💸 Withdraw Earnings'}
+            </button>
+            {isWithdrawConfirmed && (
+              <p className="text-green-600 text-sm mt-2 text-center">✅ Withdrawal successful!</p>
+            )}
+          </div>
+
+          {/* Availability Management */}
+          <div className="bg-white rounded-lg p-4 border-2 border-blue-200">
+            <p className="font-semibold text-blue-900 mb-2">📅 Manage Availability</p>
+            <p className="text-sm text-gray-600 mb-3">
+              Control which nights are available for booking
+            </p>
+            <button
+              onClick={() => setShowAvailabilityManager(!showAvailabilityManager)}
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-all shadow-md"
+            >
+              {showAvailabilityManager ? '✖️ Close Calendar' : '📆 Open Calendar'}
+            </button>
+          </div>
+        </div>
+
+        {/* Availability Manager Component */}
+        {showAvailabilityManager && (
+          <div className="mt-4">
+            <AvailabilityManager vaultId={vaultId} />
+          </div>
+        )}
       </div>
 
       {/* Update Master Code Modal */}

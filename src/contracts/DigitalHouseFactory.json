@@ -1,6 +1,6 @@
 {
   "contractName": "DigitalHouseFactory",
-  "address": "0x38e797F2f6b7ae1387e5eC7288Ec216Caf7e0109",
+  "address": "0x3a9Cc25dB5E17B3756801504d791c6533DAc0a54",
   "abi": [
     {
       "type": "constructor",
@@ -40,7 +40,51 @@
     {
       "type": "event",
       "anonymous": false,
-      "name": "DailySubVaultStateUpdated",
+      "name": "AvailabilityWindowSet",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "vaultId",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "startNight",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "endNight",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "NightAvailabilitySet",
+      "inputs": [
+        {
+          "type": "string",
+          "name": "vaultId",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "nightDate",
+          "indexed": false
+        },
+        {
+          "type": "bool",
+          "name": "isAvailable",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "NightSubVaultStateUpdated",
       "inputs": [
         {
           "type": "string",
@@ -54,7 +98,7 @@
         },
         {
           "type": "uint256",
-          "name": "date",
+          "name": "nightDate",
           "indexed": false
         },
         {
@@ -67,7 +111,7 @@
     {
       "type": "event",
       "anonymous": false,
-      "name": "DailyVaultCreated",
+      "name": "NightVaultCreated",
       "inputs": [
         {
           "type": "string",
@@ -86,12 +130,12 @@
         },
         {
           "type": "uint256",
-          "name": "date",
+          "name": "nightDate",
           "indexed": false
         },
         {
           "type": "uint256",
-          "name": "dailyPrice",
+          "name": "nightPrice",
           "indexed": false
         }
       ]
@@ -135,7 +179,7 @@
         },
         {
           "type": "uint256",
-          "name": "basePrice",
+          "name": "nightPrice",
           "indexed": false
         }
       ]
@@ -161,32 +205,6 @@
     },
     {
       "type": "function",
-      "name": "createMultiDayReservation",
-      "constant": false,
-      "payable": false,
-      "inputs": [
-        {
-          "type": "string",
-          "name": "_vaultId"
-        },
-        {
-          "type": "uint256[]",
-          "name": "_dayTimestamps"
-        },
-        {
-          "type": "string",
-          "name": "_masterAccessCode"
-        }
-      ],
-      "outputs": [
-        {
-          "type": "address[]",
-          "name": "subVaultAddresses"
-        }
-      ]
-    },
-    {
-      "type": "function",
       "name": "createVault",
       "constant": false,
       "payable": false,
@@ -201,38 +219,11 @@
         },
         {
           "type": "uint256",
-          "name": "_dailyBasePrice"
-        },
-        {
-          "type": "address",
-          "name": "_realEstateAddress"
+          "name": "_nightPrice"
         },
         {
           "type": "string",
           "name": "_masterAccessCode"
-        }
-      ],
-      "outputs": [
-        {
-          "type": "address",
-          "name": ""
-        }
-      ]
-    },
-    {
-      "type": "function",
-      "name": "dailyVaults",
-      "constant": true,
-      "stateMutability": "view",
-      "payable": false,
-      "inputs": [
-        {
-          "type": "string",
-          "name": ""
-        },
-        {
-          "type": "uint256",
-          "name": ""
         }
       ],
       "outputs": [
@@ -272,7 +263,30 @@
     },
     {
       "type": "function",
-      "name": "getDailySubVault",
+      "name": "getNightAvailability",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_vaultId"
+        },
+        {
+          "type": "uint256",
+          "name": "_nightDate"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getNightSubVault",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -283,7 +297,7 @@
         },
         {
           "type": "uint256",
-          "name": "dayTimestamp"
+          "name": "nightDate"
         }
       ],
       "outputs": [
@@ -295,7 +309,7 @@
     },
     {
       "type": "function",
-      "name": "getDailySubVaultsInfo",
+      "name": "getNightSubVaultsInfo",
       "constant": true,
       "stateMutability": "view",
       "payable": false,
@@ -320,7 +334,7 @@
             },
             {
               "type": "uint256",
-              "name": "date"
+              "name": "nightDate"
             },
             {
               "type": "uint8",
@@ -328,7 +342,7 @@
             },
             {
               "type": "uint256",
-              "name": "dailyPrice"
+              "name": "nightPrice"
             },
             {
               "type": "uint256",
@@ -340,7 +354,7 @@
     },
     {
       "type": "function",
-      "name": "getOrCreateDailyVault",
+      "name": "getOrCreateNightVault",
       "constant": false,
       "payable": false,
       "inputs": [
@@ -350,7 +364,7 @@
         },
         {
           "type": "uint256",
-          "name": "_dayTimestamp"
+          "name": "_nightDate"
         },
         {
           "type": "string",
@@ -424,10 +438,6 @@
               "name": "vaultAddress"
             },
             {
-              "type": "address",
-              "name": "realEstateAddress"
-            },
-            {
               "type": "string",
               "name": "vaultId"
             },
@@ -437,7 +447,7 @@
             },
             {
               "type": "uint256",
-              "name": "basePrice"
+              "name": "nightPrice"
             },
             {
               "type": "uint256",
@@ -448,6 +458,52 @@
               "name": "isActive"
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nightAvailability",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nightVaults",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": ""
+        },
+        {
+          "type": "uint256",
+          "name": ""
+        }
+      ],
+      "outputs": [
+        {
+          "type": "address",
+          "name": ""
         }
       ]
     },
@@ -512,6 +568,52 @@
     },
     {
       "type": "function",
+      "name": "setAvailabilityWindow",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_vaultId"
+        },
+        {
+          "type": "uint256",
+          "name": "_startNight"
+        },
+        {
+          "type": "uint256",
+          "name": "_endNight"
+        },
+        {
+          "type": "uint256",
+          "name": "_nightCount"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setNightAvailability",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "string",
+          "name": "_vaultId"
+        },
+        {
+          "type": "uint256",
+          "name": "_nightDate"
+        },
+        {
+          "type": "bool",
+          "name": "_isAvailable"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
       "name": "subVaultToParent",
       "constant": true,
       "stateMutability": "view",
@@ -544,7 +646,7 @@
     },
     {
       "type": "function",
-      "name": "updateDailySubVaultState",
+      "name": "updateNightSubVaultState",
       "constant": false,
       "payable": false,
       "inputs": [
@@ -577,10 +679,6 @@
           "name": "vaultAddress"
         },
         {
-          "type": "address",
-          "name": "realEstateAddress"
-        },
-        {
           "type": "string",
           "name": "vaultId"
         },
@@ -590,7 +688,7 @@
         },
         {
           "type": "uint256",
-          "name": "basePrice"
+          "name": "nightPrice"
         },
         {
           "type": "uint256",

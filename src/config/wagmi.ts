@@ -12,17 +12,19 @@ export const config = createConfig({
 })
 
 /**
- * Factory Contract Addresses - Daily Pricing System
+ * Factory Contract Addresses - Night-by-Night Booking System
  * 
  * These are the ONLY factory contracts we use.
  * All vaults are created and managed through these addresses.
  * 
+ * UPDATED: New deployment with night-by-night availability management
+ * 
  * If you deploy a new factory, UPDATE these addresses here.
  */
 export const CONTRACT_ADDRESSES = {
-  // TESTNETS (Active)
-  [sepolia.id]: '0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F', // Daily Pricing Factory - Sepolia
-  [arbitrumSepolia.id]: '0xC3f3B1192E938A22a79149bbFc6d8218B1bC0117', // Daily Pricing Factory - Arbitrum Sepolia
+  // TESTNETS (Active) - Night-by-Night System
+  [sepolia.id]: '0x8d0A0Ff1516ff56b36f55D0348D58A63b2751E91', // DigitalHouseFactory - Sepolia
+  [arbitrumSepolia.id]: '0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F', // DigitalHouseFactory - Arbitrum Sepolia
   
   // MAINNETS (Not deployed yet)
   [mainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Deploy to mainnet

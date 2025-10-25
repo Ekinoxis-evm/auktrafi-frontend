@@ -146,6 +146,17 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     })
   }
 
+  // Withdraw earnings (for parent vaults - treasury)
+  const withdrawEarnings = async () => {
+    console.log('💰 Withdrawing earnings from vault:', vaultAddress)
+    return writeContract({
+      address: vaultAddress,
+      abi: DigitalHouseVaultABI.abi,
+      functionName: 'withdrawEarnings',
+      args: [],
+    })
+  }
+
   return {
     // Read data
     vaultInfo,
@@ -174,6 +185,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     checkOut,
     cancelReservation,
     updateMasterAccessCode,
+    withdrawEarnings,
     
     // Transaction state
     isPending,
