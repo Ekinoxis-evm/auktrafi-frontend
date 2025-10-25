@@ -4,7 +4,7 @@ import { useAccount } from 'wagmi'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { useVaultInfo } from '@/hooks/useVaultInfo'
 import { CreateVault } from '@/components/CreateVault'
-import { VaultCard } from '@/components/vault/VaultCard'
+import { OwnerVaultCard } from '@/components/vault/OwnerVaultCard'
 import { Layout } from '@/components/Layout'
 import { WalletConnect } from '@/components/WalletConnect'
 import { useMemo } from 'react'
@@ -163,6 +163,6 @@ function OwnerCheckCard({
   }
 
   console.log('✅ User is owner, showing vault')
-  return <VaultCard vaultAddress={vaultAddress} vaultId={vaultId} showManageButton />
+  return <OwnerVaultCard vaultAddress={vaultAddress} vaultId={vaultId} />
 }
 

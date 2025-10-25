@@ -1,10 +1,10 @@
 'use client'
 
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { useChainId } from 'wagmi'
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
+import { Address, parseUnits } from 'viem'
 import { PYUSD_ADDRESSES } from '@/config/wagmi'
 
-// ERC20 ABI minimal (solo approve y allowance)
+// ERC20 ABI for approve and allowance
 const ERC20_ABI = [
   {
     name: 'approve',
@@ -35,55 +35,48 @@ const ERC20_ABI = [
   }
 ] as const
 
-export function usePYUSDApproval(ownerAddress?: `0x${string}`, spenderAddress?: `0x${string}`) {
+export function usePYUSDApproval(userAddress?: Address, spenderAddress?: Address) {
   const chainId = useChainId()
   const pyusdAddress = PYUSD_ADDRESSES[chainId as keyof typeof PYUSD_ADDRESSES]
 
-  // Check current allowance
+  // Get current allowance
   const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
     address: pyusdAddress,
     abi: ERC20_ABI,
     functionName: 'allowance',
-    args: ownerAddress && spenderAddress ? [ownerAddress, spenderAddress] : undefined,
+    args: userAddress && spenderAddress ? [userAddress, spenderAddress] : undefined,
     query: {
-      enabled: Boolean(ownerAddress && spenderAddress),
-    }
+      enabled: !!(userAddress && spenderAddress && pyusdAddress),
+    },
   })
 
-  // Check PYUSD balance
-  const { data: balance, refetch: refetchBalance } = useReadContract({
+  // Get user's PYUSD balance
+  const { data: balance } = useReadContract({
     address: pyusdAddress,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: ownerAddress ? [ownerAddress] : undefined,
+    args: userAddress ? [userAddress] : undefined,
     query: {
-      enabled: Boolean(ownerAddress),
-    }
+      enabled: !!(userAddress && pyusdAddress),
+    },
   })
 
-  // Write contract
+  // Approval transaction
   const { 
     data: hash,
     isPending,
     writeContract,
-    error: writeError
+    error 
   } = useWriteContract()
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } = 
     useWaitForTransactionReceipt({ hash })
 
-  // Approve PYUSD
   const approve = async (amount: bigint) => {
-    if (!spenderAddress) {
-      console.error('Spender address not provided')
-      throw new Error('Spender address not provided')
+    if (!pyusdAddress || !spenderAddress) {
+      throw new Error('Missing PYUSD or spender address')
     }
-    
-    console.log('=== PYUSD APPROVAL ===')
-    console.log('PYUSD Address:', pyusdAddress)
-    console.log('Spender (Vault):', spenderAddress)
-    console.log('Amount to approve:', amount.toString())
-    
+
     return writeContract({
       address: pyusdAddress,
       abi: ERC20_ABI,
@@ -92,66 +85,27 @@ export function usePYUSDApproval(ownerAddress?: `0x${string}`, spenderAddress?: 
     })
   }
 
-  // Approve max amount (common pattern)
-  const approveMax = async () => {
-    const maxUint256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-    return approve(maxUint256)
-  }
-
-  // Check if approval is needed
   const needsApproval = (amount: bigint): boolean => {
-    console.log('=== CHECK APPROVAL ===')
-    console.log('Current Allowance:', currentAllowance?.toString())
-    console.log('Amount needed:', amount.toString())
-    
-    if (!currentAllowance) {
-      console.log('No allowance found, approval needed')
-      return true
-    }
-    
-    const needed = currentAllowance < amount
-    console.log('Approval needed:', needed)
-    return needed
+    if (!currentAllowance || typeof currentAllowance !== 'bigint') return true
+    return currentAllowance < amount
   }
 
-  // Check if user has sufficient balance
   const hasSufficientBalance = (amount: bigint): boolean => {
-    console.log('=== CHECK BALANCE ===')
-    console.log('Current Balance:', balance?.toString())
-    console.log('Amount needed:', amount.toString())
-    
-    if (!balance) {
-      console.log('No balance found')
-      return false
-    }
-    
-    const sufficient = balance >= amount
-    console.log('Sufficient balance:', sufficient)
-    return sufficient
+    if (!balance || typeof balance !== 'bigint') return false
+    return balance >= amount
   }
 
   return {
-    // Read data
-    currentAllowance,
-    balance,
-    pyusdAddress,
-    refetchAllowance,
-    refetchBalance,
-    
-    // Write functions
     approve,
-    approveMax,
-    
-    // Helper functions
     needsApproval,
     hasSufficientBalance,
-    
-    // Transaction state
+    currentAllowance: currentAllowance as bigint | undefined,
+    balance: balance as bigint | undefined,
     isPending,
     isConfirming,
     isConfirmed,
     hash,
-    writeError,
+    error,
+    refetchAllowance,
   }
 }
-
