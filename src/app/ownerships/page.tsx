@@ -95,7 +95,7 @@ export default function OwnershipsPage() {
           {/* Create Vault Section */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <CreateVault userWallet={address} />
+              <CreateVault />
             </div>
           </div>
 

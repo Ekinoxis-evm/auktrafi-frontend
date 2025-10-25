@@ -44,7 +44,7 @@ export function useAvailabilityManagement(vaultId: string) {
 
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'setNightAvailability',
       args: [vaultId, nightTimestamp, isAvailable],
     })
@@ -81,7 +81,7 @@ export function useAvailabilityManagement(vaultId: string) {
 
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'setAvailabilityWindow',
       args: [vaultId, startTimestamp, endTimestamp, nightCount, isAvailable],
     })

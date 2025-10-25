@@ -11,7 +11,7 @@ import DigitalHouseVaultABI from '@/contracts/DigitalHouseVault.json'
 export function useMasterAccessCode(vaultAddress: Address | undefined) {
   const { data: masterCode, isLoading, error, refetch } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getMasterAccessCode',
     query: {
       enabled: !!vaultAddress && vaultAddress !== '0x0000000000000000000000000000000000000000',

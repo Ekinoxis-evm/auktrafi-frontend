@@ -5,13 +5,8 @@ import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { Button } from '@/components/ui/Button'
 import { parseUnits } from 'viem'
 
-interface CreateVaultProps {
-  userWallet?: `0x${string}`
-}
-
-export function CreateVault({ userWallet }: CreateVaultProps = {}) {
+export function CreateVault() {
   const { createVault, isPending, isConfirming, isConfirmed, hash } = useDigitalHouseFactory()
-  const [showTooltip, setShowTooltip] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
   const [confirmationChecked, setConfirmationChecked] = useState(false)
@@ -21,7 +16,6 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
     vaultId: '',
     propertyDetails: '',
     dailyBasePrice: '',
-    realEstateAddress: '',
     masterAccessCode: '',
   })
 
@@ -38,7 +32,6 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
         formData.vaultId,
         formData.propertyDetails,
         dailyBasePriceInWei,
-        formData.realEstateAddress,
         formData.masterAccessCode
       )
     } catch (error) {
@@ -68,7 +61,6 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
         vaultId: '',
         propertyDetails: '',
         dailyBasePrice: '',
-        realEstateAddress: '',
         masterAccessCode: '',
       })
     }
@@ -150,55 +142,6 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
           />
           <p className="text-xs text-gray-500 mt-1">
             🔑 This code will be given to guests upon check-in. You can update it later. (4-12 characters)
-          </p>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Real Estate Address
-            </label>
-            <div className="relative">
-              <button
-                type="button"
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-                className="text-blue-600 hover:text-blue-700 text-sm font-semibold"
-              >
-                ℹ️ What&apos;s this?
-              </button>
-              {showTooltip && (
-                <div className="absolute z-10 right-0 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg -mt-2">
-                  <p className="font-semibold mb-1">💰 Payment Destination</p>
-                  <p>This wallet address will receive all PYUSD payments from reservations and bids. We recommend using your own wallet address for easy access to your earnings.</p>
-                  <div className="absolute top-full right-4 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-900 -mt-2"></div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              name="realEstateAddress"
-              value={formData.realEstateAddress}
-              onChange={handleChange}
-              placeholder="0x..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-              required
-            />
-            {userWallet && (
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, realEstateAddress: userWallet }))}
-                className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md font-semibold text-sm transition-all whitespace-nowrap"
-                title="Use your connected wallet address"
-              >
-                💼 Use My Wallet
-              </button>
-            )}
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            💡 Tip: Use the address shown at the top to receive payments to your connected wallet
           </p>
         </div>
 

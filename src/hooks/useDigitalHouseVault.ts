@@ -8,50 +8,50 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   // Read functions
   const { data: vaultInfo } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getVaultInfo',
   })
 
   const { data: currentReservation, refetch: refetchReservation } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getCurrentReservation',
   })
 
   const { data: auctionBids, refetch: refetchBids } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getAuctionBids',
   })
 
   const { data: currentState } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'currentState',
   })
 
   const { data: vaultId } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'vaultId',
   })
 
   const { data: propertyDetails } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'propertyDetails',
   })
 
   // Access code read functions
   const { data: masterAccessCode, refetch: refetchMasterCode } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getMasterAccessCode',
   })
 
   const { data: currentAccessCode, refetch: refetchCurrentCode } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getCurrentAccessCode',
   })
 
@@ -73,7 +73,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   ) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'createReservation',
       args: [stakeAmount, checkInDate, checkOutDate],
     })
@@ -83,7 +83,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const placeBid = async (bidAmount: bigint) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'placeBid',
       args: [bidAmount],
     })
@@ -93,7 +93,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const cedeReservation = async (bidIndex: bigint) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'cedeReservation',
       args: [bidIndex],
     })
@@ -103,7 +103,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const withdrawBid = async (bidIndex: bigint) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'withdrawBid',
       args: [bidIndex],
     })
@@ -113,7 +113,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const checkIn = async () => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'checkIn',
     })
   }
@@ -122,7 +122,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const checkOut = async () => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'checkOut',
     })
   }
@@ -131,7 +131,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const cancelReservation = async () => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'cancelReservation',
     })
   }
@@ -140,7 +140,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
   const updateMasterAccessCode = async (newCode: string) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'updateMasterAccessCode',
       args: [newCode],
     })
@@ -151,7 +151,7 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     console.log('💰 Withdrawing earnings from vault:', vaultAddress)
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'withdrawEarnings',
       args: [],
     })

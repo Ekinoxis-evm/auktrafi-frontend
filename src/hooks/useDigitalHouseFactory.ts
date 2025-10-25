@@ -12,7 +12,7 @@ export function useDigitalHouseFactory() {
   // Read functions - fetch all vaults from THIS factory only
   const { data: allVaultIds, refetch: refetchVaultIds } = useReadContract({
     address: contractAddress,
-    abi: DigitalHouseFactoryABI.abi,
+    abi: DigitalHouseFactoryABI,
     functionName: 'getAllVaultIds',
     query: {
       // Refetch more frequently to get new vaults
@@ -31,18 +31,18 @@ export function useDigitalHouseFactory() {
     useWaitForTransactionReceipt({ hash })
 
   // Create vault function (updated with master access code)
+  // Clone Pattern: realEstateAddress is automatically set by the Factory
   const createVault = async (
     vaultId: string,
     propertyDetails: string,
-    basePrice: bigint,
-    realEstateAddress: string,
+    nightPrice: bigint,
     masterAccessCode: string
   ) => {
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'createVault',
-      args: [vaultId, propertyDetails, basePrice, realEstateAddress, masterAccessCode],
+      args: [vaultId, propertyDetails, nightPrice, masterAccessCode],
     })
   }
 
@@ -54,7 +54,7 @@ export function useDigitalHouseFactory() {
   ) => {
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getOrCreateDateVault',
       args: [parentVaultId, checkInDate, checkOutDate],
     })
@@ -68,7 +68,7 @@ export function useDigitalHouseFactory() {
   ) => {
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getOrCreateDailyVault',
       args: [parentVaultId, dayTimestamp, masterAccessCode],
     })
@@ -81,7 +81,7 @@ export function useDigitalHouseFactory() {
   ) => {
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'createMultiDayReservation',
       args: [parentVaultId, dayTimestamps, masterAccessCode],
     })
@@ -91,7 +91,7 @@ export function useDigitalHouseFactory() {
   const useVaultInfo = (vaultId: string) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getVaultInfo',
       args: [vaultId],
     })
@@ -101,7 +101,7 @@ export function useDigitalHouseFactory() {
   const useVaultAddress = (vaultId: string) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getVaultAddress',
       args: [vaultId],
     })
@@ -111,7 +111,7 @@ export function useDigitalHouseFactory() {
   const useOwnerVaults = (ownerAddress: string) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getOwnerVaults',
       args: [ownerAddress],
     })
@@ -121,7 +121,7 @@ export function useDigitalHouseFactory() {
   const useDateAvailability = (vaultId: string, checkInDate: number, checkOutDate: number) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'isDateRangeAvailable',
       args: [vaultId, checkInDate, checkOutDate],
       query: {
@@ -133,7 +133,7 @@ export function useDigitalHouseFactory() {
   const useGetDateVault = (vaultId: string, checkInDate: number, checkOutDate: number) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getDateVault',
       args: [vaultId, checkInDate, checkOutDate],
       query: {
@@ -145,7 +145,7 @@ export function useDigitalHouseFactory() {
   const useGetParentVault = (subVaultAddress: string) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getParentVault',
       args: [subVaultAddress],
       query: {
@@ -158,7 +158,7 @@ export function useDigitalHouseFactory() {
   const useGetDailySubVault = (vaultId: string, dayTimestamp: number) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getDailySubVault',
       args: [vaultId, dayTimestamp],
       query: {
@@ -170,7 +170,7 @@ export function useDigitalHouseFactory() {
   const useGetDailySubVaultsInfo = (vaultId: string) => {
     return useReadContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getDailySubVaultsInfo',
       args: [vaultId],
       query: {

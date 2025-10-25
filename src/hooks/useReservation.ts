@@ -7,7 +7,7 @@ import { Address } from 'viem'
 export function useReservation(vaultAddress: Address) {
   const { data: currentReservation, isLoading, refetch } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getCurrentReservation',
   })
 

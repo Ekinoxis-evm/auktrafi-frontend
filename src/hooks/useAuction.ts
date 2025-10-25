@@ -14,7 +14,7 @@ export interface AuctionBid {
 export function useAuction(vaultAddress: Address) {
   const { data: auctionBids, isLoading, refetch } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getAuctionBids',
   })
 

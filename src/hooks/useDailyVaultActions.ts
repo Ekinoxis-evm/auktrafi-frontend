@@ -42,7 +42,7 @@ export function useDailyVaultActions(parentVaultId: string) {
 
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'getOrCreateDailyVault',
       args: [parentVaultId, dayTimestamp, masterCode],
     })
@@ -74,7 +74,7 @@ export function useDailyVaultActions(parentVaultId: string) {
 
     return writeContract({
       address: contractAddress,
-      abi: DigitalHouseFactoryABI.abi,
+      abi: DigitalHouseFactoryABI,
       functionName: 'createMultiDayReservation',
       args: [parentVaultId, dayTimestamps, masterCode],
     })

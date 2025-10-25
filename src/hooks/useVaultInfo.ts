@@ -7,37 +7,37 @@ import { Address } from 'viem'
 export function useVaultInfo(vaultAddress: Address) {
   const { data: vaultInfo, isLoading: isLoadingInfo } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'getVaultInfo',
   })
 
   const { data: currentState, isLoading: isLoadingState } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'currentState',
   })
 
   const { data: vaultId } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'vaultId',
   })
 
   const { data: propertyDetails } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'propertyDetails',
   })
 
   const { data: owner } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'owner',
   })
 
   const { data: dailyBasePrice } = useReadContract({
     address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
+    abi: DigitalHouseVaultABI,
     functionName: 'dailyBasePrice',
   })
 

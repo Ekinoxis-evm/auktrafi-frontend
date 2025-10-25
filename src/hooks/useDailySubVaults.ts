@@ -33,7 +33,7 @@ export function useDailySubVaults(parentVaultId: string) {
   // Fetch all daily sub-vaults for this parent vault
   const { data: rawSubVaults, isLoading, error, refetch } = useReadContract({
     address: contractAddress,
-    abi: DigitalHouseFactoryABI.abi,
+    abi: DigitalHouseFactoryABI,
     functionName: 'getDailySubVaultsInfo',
     args: [parentVaultId],
     query: {

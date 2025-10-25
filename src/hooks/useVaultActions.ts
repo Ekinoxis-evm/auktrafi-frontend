@@ -22,7 +22,7 @@ export function useVaultActions(vaultAddress: Address) {
   ) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'createReservation',
       args: [stakeAmount, checkInDate, checkOutDate],
     })
@@ -31,7 +31,7 @@ export function useVaultActions(vaultAddress: Address) {
   const placeBid = async (bidAmount: bigint) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'placeBid',
       args: [bidAmount],
     })
@@ -40,7 +40,7 @@ export function useVaultActions(vaultAddress: Address) {
   const cedeReservation = async (bidIndex: bigint) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'cedeReservation',
       args: [bidIndex],
     })
@@ -49,7 +49,7 @@ export function useVaultActions(vaultAddress: Address) {
   const withdrawBid = async (bidIndex: bigint) => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'withdrawBid',
       args: [bidIndex],
     })
@@ -58,7 +58,7 @@ export function useVaultActions(vaultAddress: Address) {
   const checkIn = async () => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'checkIn',
     })
   }
@@ -66,7 +66,7 @@ export function useVaultActions(vaultAddress: Address) {
   const checkOut = async () => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'checkOut',
     })
   }
@@ -74,7 +74,7 @@ export function useVaultActions(vaultAddress: Address) {
   const cancelReservation = async () => {
     return writeContract({
       address: vaultAddress,
-      abi: DigitalHouseVaultABI.abi,
+      abi: DigitalHouseVaultABI,
       functionName: 'cancelReservation',
     })
   }
