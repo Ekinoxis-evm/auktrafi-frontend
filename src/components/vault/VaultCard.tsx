@@ -60,12 +60,18 @@ export function VaultCard({ vaultAddress, vaultId, showManageButton = false }: V
     <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 overflow-hidden group hover:scale-[1.02]">
       {/* Header with Status */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <h3 className="text-white font-bold text-lg truncate flex-1">
             🏠 {vaultId}
           </h3>
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${getVaultStateColor(stateNum)} border-2 border-white`}>
             {getVaultStateIcon(stateNum)} {getVaultStateLabel(stateNum)}
+          </span>
+        </div>
+        {/* Booking Availability Indicator */}
+        <div className="flex items-center gap-2">
+          <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white border border-white/30">
+            📅 Multiple Booking Options Available
           </span>
         </div>
       </div>

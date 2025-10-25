@@ -175,6 +175,108 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
           )}
         </div>
 
+        {/* Booking Calendar & Information Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              📅 Flexible Booking Options
+            </h3>
+            <p className="text-gray-600">
+              This property uses our advanced Sub-Vault system for date-specific bookings
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Feature 1 */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200 hover:border-blue-400 transition-all">
+              <div className="text-4xl mb-3 text-center">🗓️</div>
+              <h4 className="text-lg font-bold text-blue-900 mb-2 text-center">
+                Choose Your Dates
+              </h4>
+              <p className="text-sm text-blue-700 text-center">
+                Book specific dates that work for you. Each booking is independent and secure.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200 hover:border-purple-400 transition-all">
+              <div className="text-4xl mb-3 text-center">🔐</div>
+              <h4 className="text-lg font-bold text-purple-900 mb-2 text-center">
+                Unique Access Codes
+              </h4>
+              <p className="text-sm text-purple-700 text-center">
+                Receive both door and reception codes immediately after booking.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border-2 border-emerald-200 hover:border-emerald-400 transition-all">
+              <div className="text-4xl mb-3 text-center">🎯</div>
+              <h4 className="text-lg font-bold text-emerald-900 mb-2 text-center">
+                Auction System
+              </h4>
+              <p className="text-sm text-emerald-700 text-center">
+                Place your stake and participate in the auction until 24h before check-in.
+              </p>
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200">
+            <h4 className="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+              <span className="text-2xl">💡</span>
+              How Sub-Vault Booking Works
+            </h4>
+            <div className="grid md:grid-cols-4 gap-4 text-center">
+              <div>
+                <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
+                  <span className="text-2xl">1️⃣</span>
+                </div>
+                <p className="text-sm font-semibold text-indigo-900">Select Dates</p>
+                <p className="text-xs text-indigo-600">Pick your check-in & check-out</p>
+              </div>
+              <div>
+                <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
+                  <span className="text-2xl">2️⃣</span>
+                </div>
+                <p className="text-sm font-semibold text-indigo-900">Place Stake</p>
+                <p className="text-xs text-indigo-600">Start with minimum price</p>
+              </div>
+              <div>
+                <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
+                  <span className="text-2xl">3️⃣</span>
+                </div>
+                <p className="text-sm font-semibold text-indigo-900">Auction Period</p>
+                <p className="text-xs text-indigo-600">Others can outbid you</p>
+              </div>
+              <div>
+                <div className="bg-white rounded-lg p-3 mb-2 border-2 border-indigo-200">
+                  <span className="text-2xl">4️⃣</span>
+                </div>
+                <p className="text-sm font-semibold text-indigo-900">Check In</p>
+                <p className="text-xs text-indigo-600">Receive access codes</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          {isFree && (
+            <div className="mt-6 text-center">
+              <p className="text-lg font-semibold text-gray-900 mb-2">
+                🎉 This property is available for booking!
+              </p>
+              <p className="text-gray-600 mb-4">
+                Select your preferred dates below to get started
+              </p>
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold animate-pulse">
+                <span>👇</span>
+                <span>Scroll Down to Book</span>
+                <span>👇</span>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Flow Components */}
         <div className="max-w-4xl mx-auto">
           {isLoading ? (
