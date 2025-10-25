@@ -91,6 +91,16 @@ export default function LandingPage() {
           Powered by <span className="font-bold">PYUSD and Hardhat</span>. <br />
           Currently deployed on <span className="font-bold">Ethereum</span> & <span className="font-bold">Arbitrum</span>
         </p>
+
+        {/* Test Link (Development) */}
+        <div className="mt-4 animate-fade-in-up delay-1000">
+          <button
+            onClick={() => router.push('/test-booking')}
+            className="text-white/50 hover:text-white/80 text-xs underline transition-colors"
+          >
+            🧪 Test Booking Flow
+          </button>
+        </div>
       </div>
 
       {/* Custom Animations */}

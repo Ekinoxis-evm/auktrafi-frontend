@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
-import { DatePicker, dateToTimestamp, formatDateRange } from '../DatePicker'
+import { dateToTimestamp, formatDateRange } from '../DatePicker'
+import { AvailabilityCalendar } from '../AvailabilityCalendar'
 import { Button } from '../ui/Button'
 import { useDigitalHouseFactory } from '../../hooks/useDigitalHouseFactory'
 import { usePYUSDApproval } from '../../hooks/usePYUSDApproval'
@@ -149,6 +150,7 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
         BigInt(dateToTimestamp(selectedDates.checkIn)),
         BigInt(dateToTimestamp(selectedDates.checkOut))
       )
+      console.log('✅ Reservation created successfully')
     } catch (err) {
       setError('Failed to create reservation. Please try again.')
       console.error('Reservation creation error:', err)
@@ -196,12 +198,11 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
     switch (currentStep) {
       case 'select-dates':
         return (
-          <div className="space-y-4">
-            <DatePicker
-              onDateSelect={handleDateSelect}
-              disabled={false}
-              minStayDays={1}
-              maxStayDays={30}
+          <div className="space-y-6">
+            <AvailabilityCalendar
+              onDateRangeSelect={handleDateSelect}
+              selectedCheckIn={selectedDates?.checkIn}
+              selectedCheckOut={selectedDates?.checkOut}
             />
           </div>
         )
@@ -224,29 +225,29 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-2 text-gray-600">Checking availability...</p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {isAvailable ? (
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <p className="text-green-800 font-medium">✅ Dates are available!</p>
-                    <p className="text-green-600 text-sm">Ready to proceed with booking</p>
-                  </div>
-                ) : (
-                  <div className="p-4 bg-red-50 rounded-lg">
-                    <p className="text-red-800 font-medium">❌ Dates not available</p>
-                    <p className="text-red-600 text-sm">Please select different dates</p>
-                  </div>
-                )}
+              ) : (
+                <div className="space-y-4">
+                  {isAvailable ? (
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <p className="text-green-800 font-medium">✅ Dates are available!</p>
+                      <p className="text-green-600 text-sm">Ready to proceed with new reservation</p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-red-50 rounded-lg">
+                      <p className="text-red-800 font-medium">❌ Dates not available</p>
+                      <p className="text-red-600 text-sm">Please select different dates</p>
+                    </div>
+                  )}
 
-                <Button
-                  onClick={isAvailable ? handleCheckAvailability : () => setCurrentStep('select-dates')}
-                  disabled={isFactoryPending}
-                  className="w-full"
-                >
-                  {isFactoryPending ? 'Processing...' : isAvailable ? 'Proceed to Book' : 'Select Different Dates'}
-                </Button>
-              </div>
-            )}
+                  <Button
+                    onClick={isAvailable ? handleCheckAvailability : () => setCurrentStep('select-dates')}
+                    disabled={isFactoryPending}
+                    className="w-full"
+                  >
+                    {isFactoryPending ? 'Processing...' : isAvailable ? 'Proceed to Book' : 'Select Different Dates'}
+                  </Button>
+                </div>
+              )}
           </div>
         )
 
@@ -254,9 +255,11 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
         return (
           <div className="space-y-4">
             <div className="p-4 bg-yellow-50 rounded-lg">
-              <h3 className="font-semibold text-yellow-900">Approve PYUSD</h3>
+              <h3 className="font-semibold text-yellow-900">
+                📝 Approve PYUSD for Reservation
+              </h3>
               <p className="text-yellow-700">
-                Approve {(Number(basePrice) / 1e6).toLocaleString()} PYUSD for the booking
+                Approve {(Number(basePrice) / 1e6).toLocaleString()} PYUSD for the reservation
               </p>
               {subVaultAddress && (
                 <p className="text-xs text-yellow-600 mt-2 font-mono break-all">
@@ -283,9 +286,11 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
       case 'create-reservation':
         return (
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-blue-900">Create Reservation</h3>
-              <p className="text-blue-700">
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h3 className="font-semibold text-green-900">
+                📝 Create Reservation
+              </h3>
+              <p className="text-green-700">
                 Final step: Create your reservation for {selectedDates && formatDateRange(selectedDates.checkIn, selectedDates.checkOut)}
               </p>
             </div>
@@ -305,7 +310,9 @@ export function DateBookingFlow({ vaultId, basePrice }: DateBookingFlowProps) {
           <div className="space-y-4">
             <div className="p-6 bg-green-50 rounded-lg text-center border-2 border-green-200">
               <div className="text-6xl mb-4">🎉</div>
-              <h3 className="text-2xl font-bold text-green-900 mb-2">Reservation Confirmed!</h3>
+              <h3 className="text-2xl font-bold text-green-900 mb-2">
+                Reservation Confirmed!
+              </h3>
               <p className="text-green-700 font-medium">
                 Your booking for {selectedDates && formatDateRange(selectedDates.checkIn, selectedDates.checkOut)} is confirmed.
               </p>
