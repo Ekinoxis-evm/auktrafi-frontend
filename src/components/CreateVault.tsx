@@ -20,7 +20,7 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
   const [formData, setFormData] = useState({
     vaultId: '',
     propertyDetails: '',
-    basePrice: '',
+    dailyBasePrice: '',
     realEstateAddress: '',
     masterAccessCode: '',
   })
@@ -29,7 +29,7 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
     e.preventDefault()
     
     try {
-      const basePriceInWei = parseUnits(formData.basePrice, 6) // PYUSD has 6 decimals
+      const dailyBasePriceInWei = parseUnits(formData.dailyBasePrice, 6) // PYUSD has 6 decimals
       
       // Save the master code before creating vault
       setSavedCode(formData.masterAccessCode)
@@ -37,7 +37,7 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
       await createVault(
         formData.vaultId,
         formData.propertyDetails,
-        basePriceInWei,
+        dailyBasePriceInWei,
         formData.realEstateAddress,
         formData.masterAccessCode
       )
@@ -67,7 +67,7 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
       setFormData({
         vaultId: '',
         propertyDetails: '',
-        basePrice: '',
+        dailyBasePrice: '',
         realEstateAddress: '',
         masterAccessCode: '',
       })
@@ -118,12 +118,12 @@ export function CreateVault({ userWallet }: CreateVaultProps = {}) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Base Price (PYUSD)
+            Daily Rate (PYUSD/day)
           </label>
           <input
             type="number"
-            name="basePrice"
-            value={formData.basePrice}
+            name="dailyBasePrice"
+            value={formData.dailyBasePrice}
             onChange={handleChange}
             placeholder="1000"
             step="0.01"

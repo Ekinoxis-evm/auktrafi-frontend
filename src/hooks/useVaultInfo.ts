@@ -17,12 +17,6 @@ export function useVaultInfo(vaultAddress: Address) {
     functionName: 'currentState',
   })
 
-  const { data: basePrice } = useReadContract({
-    address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
-    functionName: 'basePrice',
-  })
-
   const { data: vaultId } = useReadContract({
     address: vaultAddress,
     abi: DigitalHouseVaultABI.abi,
@@ -50,7 +44,6 @@ export function useVaultInfo(vaultAddress: Address) {
   return {
     vaultInfo,
     currentState,
-    basePrice,
     dailyBasePrice,
     vaultId,
     propertyDetails,

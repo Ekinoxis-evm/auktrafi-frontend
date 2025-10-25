@@ -53,7 +53,7 @@ export default function VaultDetailPage({ params }: { params: Promise<{ vaultId:
 }
 
 function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; vaultId: string }) {
-  const { propertyDetails, basePrice, currentState, owner, isLoading } = useVaultInfo(vaultAddress)
+  const { propertyDetails, dailyBasePrice, currentState, owner, isLoading } = useVaultInfo(vaultAddress)
   const { stakeAmount } = useReservation(vaultAddress)
   const { activeBids } = useAuction(vaultAddress)
   const chainId = useChainId()
@@ -117,10 +117,10 @@ function VaultDetail({ vaultAddress, vaultId }: { vaultAddress: `0x${string}`; v
                 <span className={`px-4 py-2 rounded-full text-sm font-bold ${getVaultStateColor(stateNum)}`}>
                   {getVaultStateIcon(stateNum)} {getVaultStateLabel(stateNum)}
                 </span>
-                {basePrice && typeof basePrice === 'bigint' ? (
+                {dailyBasePrice && typeof dailyBasePrice === 'bigint' ? (
                   <div className="px-4 py-2 bg-gray-100 rounded-full">
                     <span className="text-sm font-semibold text-gray-700">
-                      💰 Base Price: {formatUnits(basePrice, 6)} PYUSD
+                      💰 Daily Rate: {formatUnits(dailyBasePrice, 6)} PYUSD/day
                     </span>
                   </div>
                 ) : null}

@@ -30,12 +30,6 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     functionName: 'currentState',
   })
 
-  const { data: basePrice } = useReadContract({
-    address: vaultAddress,
-    abi: DigitalHouseVaultABI.abi,
-    functionName: 'basePrice',
-  })
-
   const { data: vaultId } = useReadContract({
     address: vaultAddress,
     abi: DigitalHouseVaultABI.abi,
@@ -158,7 +152,6 @@ export function useDigitalHouseVault(vaultAddress: Address) {
     currentReservation,
     auctionBids,
     currentState,
-    basePrice,
     vaultId,
     propertyDetails,
     
