@@ -51,7 +51,7 @@ export function OwnerVaultCard({ vaultAddress, vaultId }: OwnerVaultCardProps) {
   const stateNum = currentState !== undefined ? Number(currentState) : -1
   const isFree = stateNum === VaultState.FREE
   const isAuction = stateNum === VaultState.AUCTION
-  const isOccupied = stateNum === VaultState.OCCUPIED
+  const isSettled = stateNum === VaultState.SETTLED
 
   // Generate access link
   const accessLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/marketplace/${encodeURIComponent(vaultId)}`
