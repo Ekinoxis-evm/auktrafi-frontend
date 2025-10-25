@@ -11,13 +11,22 @@ export const config = createConfig({
   },
 })
 
-// Contract addresses per network (Sub-Vault System v2.0)
+/**
+ * Factory Contract Addresses - Daily Pricing System
+ * 
+ * These are the ONLY factory contracts we use.
+ * All vaults are created and managed through these addresses.
+ * 
+ * If you deploy a new factory, UPDATE these addresses here.
+ */
 export const CONTRACT_ADDRESSES = {
-  [sepolia.id]: '0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F', // Updated with Sub-Vault System
-  [arbitrumSepolia.id]: '0xC3f3B1192E938A22a79149bbFc6d8218B1bC0117', // Updated with Sub-Vault System
-  // Add mainnet and arbitrum addresses when deployed
-  [mainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Add mainnet address
-  [arbitrum.id]: '0x0000000000000000000000000000000000000000', // TODO: Add arbitrum address
+  // TESTNETS (Active)
+  [sepolia.id]: '0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F', // Daily Pricing Factory - Sepolia
+  [arbitrumSepolia.id]: '0xC3f3B1192E938A22a79149bbFc6d8218B1bC0117', // Daily Pricing Factory - Arbitrum Sepolia
+  
+  // MAINNETS (Not deployed yet)
+  [mainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Deploy to mainnet
+  [arbitrum.id]: '0x0000000000000000000000000000000000000000', // TODO: Deploy to arbitrum
 } as const
 
 export const PYUSD_ADDRESSES = {

@@ -9,11 +9,15 @@ export function useDigitalHouseFactory() {
   const chainId = useChainId()
   const contractAddress = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]
 
-  // Read functions
+  // Read functions - fetch all vaults from THIS factory only
   const { data: allVaultIds, refetch: refetchVaultIds } = useReadContract({
     address: contractAddress,
     abi: DigitalHouseFactoryABI.abi,
     functionName: 'getAllVaultIds',
+    query: {
+      // Refetch more frequently to get new vaults
+      refetchInterval: 30000, // Refetch every 30 seconds
+    },
   })
 
   // Write functions
