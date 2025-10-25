@@ -10,8 +10,10 @@ Auktrafi enables property owners to tokenize their real estate as vaults and all
 
 ### 🏡 For Property Owners
 - **Create Vaults**: Tokenize properties with master access codes
-- **Daily Pricing**: Set base daily rates for flexible bookings
+- **Nightly Pricing**: Set base nightly rates for flexible bookings
+- **Availability Management**: Block or open specific nights for booking
 - **Revenue Dashboard**: Track bookings and earnings per property
+- **Withdraw Earnings**: Transfer accumulated PYUSD from bookings
 - **Access Control**: Manage master and daily access codes
 - **Multi-chain**: Deploy on Ethereum Mainnet, Arbitrum, or testnets
 
@@ -22,30 +24,70 @@ Auktrafi enables property owners to tokenize their real estate as vaults and all
 - **Instant Bookings**: Reserve available dates immediately
 - **Access Codes**: Receive codes after check-in for property access
 
-### 🎨 Daily Pricing Calendar System
+### 🎨 Night-by-Night Booking System
 
-The platform uses a **daily sub-vault architecture** where each day is an independent booking unit:
+The platform uses a **daily sub-vault architecture** where each night is an independent booking unit:
 
 - **🟢 FREE** - Available for immediate booking
 - **🟡 AUCTION** - Active bids, users can compete
 - **🔴 SETTLED** - Occupied, not available
 - **⚪ Available** - No sub-vault yet, can be booked
 
+### 🆕 New Features - Night-by-Night System
+
+#### For Property Owners
+1. **Availability Management** 
+   - Block specific nights (maintenance, personal use)
+   - Open specific nights for booking
+   - Bulk operations for date ranges
+   - Visual calendar interface
+
+2. **Withdraw Earnings**
+   - One-click withdrawal of accumulated PYUSD
+   - View total balance in real-time
+   - Transparent revenue tracking
+
+#### For All Users
+- Changed terminology from "days" to "nights" (hotel-style)
+- Prominent booking button after date selection
+- Improved visual feedback throughout booking flow
+
 ## 🏗️ Architecture
+
+### 📍 Deployed Contracts (Night-by-Night System)
+
+#### Sepolia Testnet (Chain ID: 11155111)
+```
+Factory: 0x8d0A0Ff1516ff56b36f55D0348D58A63b2751E91
+PYUSD:   0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9
+```
+- [View Factory on Etherscan](https://sepolia.etherscan.io/address/0x8d0A0Ff1516ff56b36f55D0348D58A63b2751E91)
+
+#### Arbitrum Sepolia (Chain ID: 421614)
+```
+Factory: 0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F
+PYUSD:   0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1
+```
+- [View Factory on Arbiscan](https://sepolia.arbiscan.io/address/0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F)
 
 ### Smart Contract System
 
 ```
 DigitalHouseFactory (Factory Contract)
-├── createVault(vaultId, details, basePrice, address, masterCode)
+├── createVault(vaultId, details, nightlyPrice, address, masterCode)
+├── setNightAvailability(vaultId, nightDate, isAvailable)      🆕
+├── setAvailabilityWindow(vaultId, start, end, count, isAvail) 🆕
 ├── getOrCreateDailyVault(vaultId, dayTimestamp, masterCode)
-└── createMultiDayReservation(vaultId, dayTimestamps[], masterCode)
+├── createMultiDayReservation(vaultId, dayTimestamps[], masterCode)
+└── getDailySubVaultsInfo(parentVaultId)
 
 DigitalHouseVault (Parent Vault)
-├── dailyBasePrice (daily rate)
+├── dailyBasePrice (nightly rate)
 ├── getMasterAccessCode()
+├── withdrawEarnings()                                          🆕
+├── cedeReservation(bidIndex)
 └── Daily Sub-Vaults (children)
-    ├── Individual day bookings
+    ├── Individual night bookings
     ├── State: FREE → AUCTION → SETTLED
     └── Access codes per booking
 ```
@@ -70,10 +112,12 @@ src/
 │   ├── vault/
 │   │   ├── DailyBookingFlow.tsx          # 5-step booking process
 │   │   ├── VaultCard.tsx                 # Property card with stats
-│   │   ├── OwnerVaultCard.tsx            # Owner property card
+│   │   ├── OwnerVaultCard.tsx            # Owner property card (+ withdraw, availability)
 │   │   ├── ReservationCard.tsx           # User reservation card
 │   │   ├── AuctionFlow.tsx               # Auction bidding interface
 │   │   └── CreateVault.tsx               # Create new property
+│   ├── owner/
+│   │   └── AvailabilityManager.tsx       # 🆕 Block/open nights management
 │   ├── Layout.tsx                    # Persistent navbar + footer
 │   ├── WalletConnect.tsx             # Connect/disconnect wallet
 │   ├── NetworkSwitcher.tsx           # Chain selector
@@ -82,8 +126,9 @@ src/
 │   ├── useDailySubVaults.ts          # Fetch daily sub-vaults
 │   ├── useDailyVaultActions.ts       # Create bookings
 │   ├── useMasterAccessCode.ts        # Fetch master code
+│   ├── useAvailabilityManagement.ts  # 🆕 Owner availability control
 │   ├── useDigitalHouseFactory.ts     # Factory contract interactions
-│   ├── useDigitalHouseVault.ts       # Vault contract interactions
+│   ├── useDigitalHouseVault.ts       # Vault contract interactions (+ withdrawEarnings)
 │   ├── useAccessCodes.ts             # Access code management
 │   ├── useVaultInfo.ts               # Vault metadata
 │   ├── useReservation.ts             # Reservation data
