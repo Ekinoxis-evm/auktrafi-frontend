@@ -10,6 +10,7 @@ import { useDailyVaultActions } from '@/hooks/useDailyVaultActions'
 import { usePYUSDApproval } from '@/hooks/usePYUSDApproval'
 import { useMasterAccessCode } from '@/hooks/useMasterAccessCode'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
+import { useVaultInfo } from '@/hooks/useVaultInfo'
 import { FundWallet } from '@/components/FundWallet'
 import Link from 'next/link'
 
@@ -29,6 +30,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const { contractAddress: factoryAddress } = useDigitalHouseFactory()
   const { getDailyPrice, refetch: refetchSubVaults } = useDailySubVaults(vaultId)
   const { masterCode, isLoading: isLoadingMasterCode } = useMasterAccessCode(parentVaultAddress)
+  const { dailyBasePrice: parentVaultDailyPrice } = useVaultInfo(parentVaultAddress)
   
   const {
     createMultiDayBooking,
@@ -47,8 +49,29 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     currentBookingDate,
   } = useDailyVaultActions(vaultId)
 
-  const dailyPrice = getDailyPrice()
+  // Get daily price - use parent vault price if no sub-vaults exist yet
+  const subVaultDailyPrice = getDailyPrice()
+  const dailyPrice = subVaultDailyPrice > BigInt(0) 
+    ? subVaultDailyPrice 
+    : (parentVaultDailyPrice && typeof parentVaultDailyPrice === 'bigint' ? parentVaultDailyPrice : BigInt(0))
+  
   const totalCost = dailyPrice * BigInt(selectedDates.length)
+
+  // Debug logging for pricing issues
+  useEffect(() => {
+    if (selectedDates.length > 0) {
+      console.log('🏷️ Pricing Debug:', {
+        vaultId,
+        selectedDatesCount: selectedDates.length,
+        subVaultDailyPrice: subVaultDailyPrice.toString(),
+        parentVaultDailyPrice: parentVaultDailyPrice ? parentVaultDailyPrice.toString() : 'undefined',
+        finalDailyPrice: dailyPrice.toString(),
+        totalCost: totalCost.toString(),
+        formattedDailyPrice: dailyPrice > BigInt(0) ? formatUnits(dailyPrice, 6) : '0',
+        formattedTotalCost: totalCost > BigInt(0) ? formatUnits(totalCost, 6) : '0',
+      })
+    }
+  }, [selectedDates.length, vaultId, subVaultDailyPrice, parentVaultDailyPrice, dailyPrice, totalCost])
 
   // IMPORTANT: Approve PYUSD to factory contract, not parent vault
   const {
@@ -244,7 +267,8 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
               selectedDates={selectedDates}
             />
 
-            {selectedDates.length > 0 && dailyPrice > 0 && (
+            {selectedDates.length > 0 && (
+              dailyPrice > BigInt(0) ? (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200 shadow-xl">
                 <h4 className="text-xl font-bold text-blue-900 mb-4">💰 Booking Summary</h4>
                 <div className="space-y-3 text-sm mb-6">
@@ -301,10 +325,43 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                   }
                 </Button>
               </div>
+              ) : (
+                // Show loading/error state when pricing is not available
+                <div className="bg-yellow-50 rounded-xl p-6 border-2 border-yellow-200">
+                  <h4 className="text-xl font-bold text-yellow-900 mb-4">⚠️ Pricing Information</h4>
+                  <div className="space-y-3">
+                    <p className="text-yellow-700 mb-4">
+                      🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''} selected
+                    </p>
+                    <div className="bg-white rounded-lg p-4 border">
+                      <div className="text-sm space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Sub-vault price:</span>
+                          <span className="font-mono">{subVaultDailyPrice.toString()} wei</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Parent vault price:</span>
+                          <span className="font-mono">{parentVaultDailyPrice ? parentVaultDailyPrice.toString() : 'Loading...'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Final price:</span>
+                          <span className="font-mono">{dailyPrice.toString()} wei</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-yellow-700 text-sm">
+                      {parentVaultDailyPrice === undefined 
+                        ? '⏳ Loading vault pricing information...'
+                        : '❌ No pricing information available. Please contact the property owner.'
+                      }
+                    </p>
+                  </div>
+                </div>
+              )
             )}
             
             {/* Show FundWallet if insufficient balance */}
-            {address && selectedDates.length > 0 && !hasSufficientBalance(totalCost) && (
+            {address && selectedDates.length > 0 && dailyPrice > BigInt(0) && !hasSufficientBalance(totalCost) && (
               <div className="mt-6">
                 <FundWallet />
               </div>
