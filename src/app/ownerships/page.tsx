@@ -2,6 +2,7 @@
 
 import { useAccount } from 'wagmi'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
+import { useVaultInfo } from '@/hooks/useVaultInfo'
 import { CreateVault } from '@/components/CreateVault'
 import { OwnerVaultCard } from '@/components/vault/OwnerVaultCard'
 import { Layout } from '@/components/Layout'
@@ -141,9 +142,10 @@ export default function OwnershipsPage() {
 // Component to display each vault - gets vault address then shows card
 function OwnershipVaultCard({ vaultId }: { vaultId: string }) {
   const { useVaultAddress } = useDigitalHouseFactory()
-  const { data: vaultAddress, isLoading } = useVaultAddress(vaultId)
+  const { data: vaultAddress, isLoading: isLoadingAddress } = useVaultAddress(vaultId)
+  const { dailyBasePrice, isLoading: isLoadingInfo } = useVaultInfo(vaultAddress as `0x${string}`)
 
-  if (isLoading) {
+  if (isLoadingAddress || isLoadingInfo) {
     return (
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-pulse">
         <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -151,6 +153,12 @@ function OwnershipVaultCard({ vaultId }: { vaultId: string }) {
         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
       </div>
     )
+  }
+
+  // Skip vaults that don't support daily pricing (old contracts)
+  if (!dailyBasePrice || dailyBasePrice === BigInt(0)) {
+    console.log('⏭️ Skipping owned vault without daily pricing:', vaultId)
+    return null
   }
 
   if (!vaultAddress) return null

@@ -134,7 +134,13 @@ function MarketplaceVaultCard({ vaultId, filterStatus }: { vaultId: string; filt
 }
 
 function FilteredVaultCard({ vaultAddress, vaultId, filterStatus }: { vaultAddress: `0x${string}`; vaultId: string; filterStatus: 'all' | VaultState }) {
-  const { currentState } = useVaultInfo(vaultAddress)
+  const { currentState, dailyBasePrice, isLoading } = useVaultInfo(vaultAddress)
+  
+  // Skip vaults that don't support daily pricing (old contracts)
+  if (!isLoading && (!dailyBasePrice || dailyBasePrice === BigInt(0))) {
+    console.log('⏭️ Skipping vault without daily pricing:', vaultId)
+    return null
+  }
   
   // Apply filter
   if (filterStatus !== 'all' && Number(currentState) !== filterStatus) {

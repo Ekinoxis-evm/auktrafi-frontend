@@ -25,6 +25,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
   const [error, setError] = useState<string>('')
 
+  const { contractAddress: factoryAddress } = useDigitalHouseFactory()
   const { getDailyPrice, refetch: refetchSubVaults } = useDailySubVaults(vaultId)
   const { masterCode, isLoading: isLoadingMasterCode } = useMasterAccessCode(parentVaultAddress)
   
@@ -38,12 +39,13 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const dailyPrice = getDailyPrice()
   const totalCost = dailyPrice * BigInt(selectedDates.length)
 
+  // IMPORTANT: Approve PYUSD to factory contract, not parent vault
   const {
     approve: approvePYUSD,
     isPending: isApprovePending,
     isConfirming: isApproveConfirming,
     isConfirmed: isApproveConfirmed,
-  } = usePYUSDApproval(address, parentVaultAddress)
+  } = usePYUSDApproval(address, factoryAddress)
 
   // Handle date selection
   const handleDateSelect = (dates: Date[]) => {
@@ -69,8 +71,9 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
     console.log('🔍 Approving PYUSD:', {
       amount: totalCost.toString(),
-      spender: parentVaultAddress,
+      spender: factoryAddress,
       owner: address,
+      note: 'Approving to factory contract for multi-day booking',
     })
 
     try {
@@ -118,7 +121,8 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     if (currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming && !isBookingConfirmed) {
       handleCreateBooking()
     }
-  }, [currentStep])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, isBookingPending, isBookingConfirming, isBookingConfirmed])
 
   // Auto-progress to success after booking confirmed
   useEffect(() => {
