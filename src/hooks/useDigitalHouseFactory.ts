@@ -42,7 +42,7 @@ export function useDigitalHouseFactory() {
     })
   }
 
-  // Get or create date vault (Sub-Vault System)
+  // Get or create date vault (Sub-Vault System - Date Range)
   const getOrCreateDateVault = async (
     parentVaultId: string,
     checkInDate: number,
@@ -53,6 +53,33 @@ export function useDigitalHouseFactory() {
       abi: DigitalHouseFactoryABI.abi,
       functionName: 'getOrCreateDateVault',
       args: [parentVaultId, checkInDate, checkOutDate],
+    })
+  }
+
+  // Daily Vault System functions
+  const getOrCreateDailyVault = async (
+    parentVaultId: string,
+    dayTimestamp: number,
+    masterAccessCode: string
+  ) => {
+    return writeContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'getOrCreateDailyVault',
+      args: [parentVaultId, dayTimestamp, masterAccessCode],
+    })
+  }
+
+  const createMultiDayReservation = async (
+    parentVaultId: string,
+    dayTimestamps: number[],
+    masterAccessCode: string
+  ) => {
+    return writeContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'createMultiDayReservation',
+      args: [parentVaultId, dayTimestamps, masterAccessCode],
     })
   }
 
@@ -123,6 +150,31 @@ export function useDigitalHouseFactory() {
     })
   }
 
+  // Daily Vault System hooks
+  const useGetDailySubVault = (vaultId: string, dayTimestamp: number) => {
+    return useReadContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'getDailySubVault',
+      args: [vaultId, dayTimestamp],
+      query: {
+        enabled: !!contractAddress && !!vaultId && dayTimestamp > 0,
+      },
+    })
+  }
+
+  const useGetDailySubVaultsInfo = (vaultId: string) => {
+    return useReadContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI.abi,
+      functionName: 'getDailySubVaultsInfo',
+      args: [vaultId],
+      query: {
+        enabled: !!contractAddress && !!vaultId,
+      },
+    })
+  }
+
   return {
     // Contract info
     contractAddress,
@@ -135,6 +187,8 @@ export function useDigitalHouseFactory() {
     // Write functions
     createVault,
     getOrCreateDateVault,
+    getOrCreateDailyVault,
+    createMultiDayReservation,
     isPending,
     isConfirming,
     isConfirmed,
@@ -145,10 +199,14 @@ export function useDigitalHouseFactory() {
     useVaultAddress,
     useOwnerVaults,
     
-    // Sub-Vault System hooks
+    // Sub-Vault System hooks (Date Range)
     useDateAvailability,
     useGetDateVault,
     useGetParentVault,
+    
+    // Daily Vault System hooks
+    useGetDailySubVault,
+    useGetDailySubVaultsInfo,
   }
 }
 
