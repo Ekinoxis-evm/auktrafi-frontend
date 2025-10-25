@@ -1,5 +1,21 @@
 'use client'
 
+/**
+ * @deprecated This component is deprecated and should not be used in new code.
+ * Use DateBookingFlow instead, which supports the Sub-Vault system.
+ * 
+ * DateBookingFlow provides:
+ * - Date-specific bookings with sub-vaults
+ * - Multiple concurrent reservations
+ * - Access code management
+ * - Better availability checking
+ * 
+ * Migration: Replace <ReservationFlow vaultAddress={addr} basePrice={price} />
+ * with <DateBookingFlow vaultId={id} basePrice={price} />
+ * 
+ * This component remains for backward compatibility only.
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import { Address, parseUnits } from 'viem'
 import { useAccount } from 'wagmi'
