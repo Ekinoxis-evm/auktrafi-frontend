@@ -17,14 +17,15 @@ export const config = createConfig({
  * These are the ONLY factory contracts we use.
  * All vaults are created and managed through these addresses.
  * 
- * UPDATED: New deployment with night-by-night availability management
+ * Deployed: October 26, 2025
+ * Updated: Night number system (simple integers instead of timestamps)
  * 
  * If you deploy a new factory, UPDATE these addresses here.
  */
 export const CONTRACT_ADDRESSES = {
   // TESTNETS (Active) - Night-by-Night System
-  [sepolia.id]: '0x2B7399bce5fCa0715d98D0aD3FD4661AA261fD6E', // DigitalHouseFactory - Sepolia
-  [arbitrumSepolia.id]: '0x3d948AEE9A3eC7760e05A09797691079dE6B4E59', // DigitalHouseFactory - Arbitrum Sepolia
+  [sepolia.id]: '0xD55Ff22f805487f78120b124D72a92c727243a19', // DigitalHouseFactory - Sepolia (Oct 26, 2025)
+  [arbitrumSepolia.id]: '0x9fc0bdDF5E230256C0eEa3DD9B23EA7c05369865', // DigitalHouseFactory - Arbitrum Sepolia (Oct 26, 2025)
   
   // MAINNETS (Not deployed yet)
   [mainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Deploy to mainnet

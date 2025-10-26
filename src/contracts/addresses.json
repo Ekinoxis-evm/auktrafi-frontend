@@ -1,0 +1,79 @@
+{
+  "networks": {
+    "sepolia": {
+      "chainId": 11155111,
+      "name": "sepolia",
+      "contracts": {
+        "DigitalHouseVaultImplementation": {
+          "address": "0x9d7FD4F2e491f420c4a32D1514204B674A6278b3",
+          "deployedAt": "2025-10-26T15:24:49.352Z",
+          "deployer": "0x854b298d922fDa553885EdeD14a84eb088355822",
+          "verified": false
+        },
+        "DigitalHouseFactory": {
+          "address": "0xD55Ff22f805487f78120b124D72a92c727243a19",
+          "deployedAt": "2025-10-26T15:24:49.352Z",
+          "deployer": "0x854b298d922fDa553885EdeD14a84eb088355822",
+          "verified": false
+        },
+        "PYUSD": {
+          "address": "0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9",
+          "deployedAt": "N/A",
+          "deployer": "N/A",
+          "verified": true,
+          "external": true
+        },
+        "DigitalHouseMultisig": {
+          "address": "0x1234567890123456789012345678901234567890",
+          "deployedAt": "N/A",
+          "deployer": "N/A",
+          "verified": true,
+          "external": true
+        }
+      }
+    },
+    "arbitrumSepolia": {
+      "chainId": 421614,
+      "name": "arbitrumSepolia",
+      "contracts": {
+        "DigitalHouseVaultImplementation": {
+          "address": "0x3a9Cc25dB5E17B3756801504d791c6533DAc0a54",
+          "deployedAt": "2025-10-26T15:25:50.928Z",
+          "deployer": "0x854b298d922fDa553885EdeD14a84eb088355822",
+          "verified": false
+        },
+        "DigitalHouseFactory": {
+          "address": "0x9fc0bdDF5E230256C0eEa3DD9B23EA7c05369865",
+          "deployedAt": "2025-10-26T15:25:50.928Z",
+          "deployer": "0x854b298d922fDa553885EdeD14a84eb088355822",
+          "verified": false
+        },
+        "PYUSD": {
+          "address": "0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1",
+          "deployedAt": "N/A",
+          "deployer": "N/A",
+          "verified": true,
+          "external": true
+        },
+        "DigitalHouseMultisig": {
+          "address": "0x1234567890123456789012345678901234567890",
+          "deployedAt": "N/A",
+          "deployer": "N/A",
+          "verified": true,
+          "external": true
+        }
+      }
+    }
+  },
+  "multisig": "0x854b298d922fDa553885EdeD14a84eb088355822",
+  "contracts": {
+    "factory": {
+      "sepolia": "0xD55Ff22f805487f78120b124D72a92c727243a19",
+      "arbitrumSepolia": "0x9fc0bdDF5E230256C0eEa3DD9B23EA7c05369865"
+    },
+    "pyusd": {
+      "sepolia": "0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9",
+      "arbitrumSepolia": "0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1"
+    }
+  }
+}

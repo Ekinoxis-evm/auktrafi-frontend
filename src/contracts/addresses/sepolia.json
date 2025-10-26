@@ -3,8 +3,8 @@
   "name": "sepolia",
   "contracts": {
     "DigitalHouseFactory": {
-      "address": "0x2B7399bce5fCa0715d98D0aD3FD4661AA261fD6E",
-      "deployedAt": "2025-10-25T12:49:01.864Z",
+      "address": "0xD55Ff22f805487f78120b124D72a92c727243a19",
+      "deployedAt": "2025-10-26T15:24:49.352Z",
       "deployer": "0x854b298d922fDa553885EdeD14a84eb088355822",
       "verified": false
     },
@@ -16,17 +16,18 @@
       "external": true
     },
     "DigitalHouseMultisig": {
-      "address": "0x854b298d922fDa553885EdeD14a84eb088355822",
+      "address": "0x1234567890123456789012345678901234567890",
       "deployedAt": "N/A",
       "deployer": "N/A",
       "verified": true,
       "external": true
     },
     "DigitalHouseVaultImplementation": {
-      "address": "0x847Fc56F9B339db4f977e3cC553f2159A3018F99",
-      "deployedAt": "2025-10-25T12:49:01.864Z",
+      "address": "0x9d7FD4F2e491f420c4a32D1514204B674A6278b3",
+      "deployedAt": "2025-10-26T15:24:49.352Z",
       "deployer": "0x854b298d922fDa553885EdeD14a84eb088355822",
       "verified": false
     }
   }
 }
+
