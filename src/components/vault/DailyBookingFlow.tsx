@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { formatUnits } from 'viem'
 import { DailySubVaultsCalendar } from '@/components/calendar/DailySubVaultsCalendar'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +12,8 @@ import { useMasterAccessCode } from '@/hooks/useMasterAccessCode'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { useVaultInfo } from '@/hooks/useVaultInfo'
 import { FundWallet } from '@/components/FundWallet'
+import { CONTRACT_ADDRESSES } from '@/config/wagmi'
+import { sepolia, arbitrumSepolia } from 'wagmi/chains'
 import Link from 'next/link'
 
 type BookingStep = 'select-dates' | 'confirm' | 'approve-pyusd' | 'create-booking' | 'success'
@@ -23,9 +25,14 @@ interface DailyBookingFlowProps {
 
 export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFlowProps) {
   const { address } = useAccount()
+  const chainId = useChainId()
   const [currentStep, setCurrentStep] = useState<BookingStep>('select-dates')
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
   const [error, setError] = useState<string>('')
+
+  // Validate chain support
+  const isSupportedChain = chainId === sepolia.id || chainId === arbitrumSepolia.id
+  const currentChainAddress = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]
 
   const { contractAddress: factoryAddress } = useDigitalHouseFactory()
   const { getDailyPrice, refetch: refetchSubVaults } = useDailySubVaults(vaultId)
@@ -57,21 +64,6 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   
   const totalCost = dailyPrice * BigInt(selectedDates.length)
 
-  // Debug logging for pricing issues
-  useEffect(() => {
-    if (selectedDates.length > 0) {
-      console.log('🏷️ Pricing Debug:', {
-        vaultId,
-        selectedDatesCount: selectedDates.length,
-        subVaultDailyPrice: subVaultDailyPrice.toString(),
-        parentVaultDailyPrice: parentVaultDailyPrice ? parentVaultDailyPrice.toString() : 'undefined',
-        finalDailyPrice: dailyPrice.toString(),
-        totalCost: totalCost.toString(),
-        formattedDailyPrice: dailyPrice > BigInt(0) ? formatUnits(dailyPrice, 6) : '0',
-        formattedTotalCost: totalCost > BigInt(0) ? formatUnits(totalCost, 6) : '0',
-      })
-    }
-  }, [selectedDates.length, vaultId, subVaultDailyPrice, parentVaultDailyPrice, dailyPrice, totalCost])
 
   // IMPORTANT: Approve PYUSD to factory contract, not parent vault
   const {
@@ -105,6 +97,12 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       return
     }
 
+    // Check chain support
+    if (!isSupportedChain || !currentChainAddress) {
+      setError(`Please switch to Sepolia or Arbitrum Sepolia network. Current chain ID: ${chainId}`)
+      return
+    }
+
     // Check factory address
     if (!factoryAddress) {
       setError('Factory contract not available. Please switch to a supported network.')
@@ -119,16 +117,14 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       return
     }
 
-    console.log('✅ Validation passed - proceeding to PYUSD approval:', {
-      address,
-      factoryAddress,
-      totalCost: formatUnits(totalCost, 6),
-      balance: pyusdBalance ? formatUnits(pyusdBalance, 6) : 'N/A',
-      needsApproval: needsApproval(totalCost),
-      currentAllowance: currentAllowance ? formatUnits(currentAllowance, 6) : 'N/A'
-    })
+    const needsApprove = needsApproval(totalCost)
 
-    setCurrentStep('approve-pyusd')
+    // Skip approval if already approved
+    if (!needsApprove) {
+      setCurrentStep('create-booking')
+    } else {
+      setCurrentStep('approve-pyusd')
+    }
   }
 
   // Handle PYUSD approval
@@ -143,22 +139,9 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       return
     }
 
-    console.log('🔍 Approving PYUSD:', {
-      amount: totalCost.toString(),
-      formattedAmount: formatUnits(totalCost, 6),
-      spender: factoryAddress,
-      owner: address,
-      note: 'Approving to factory contract for multi-day booking',
-    })
-
     try {
       await approvePYUSD(totalCost)
-      console.log('✅ PYUSD approval transaction submitted')
     } catch (err) {
-      console.error('❌ PYUSD approval error:', err)
-      if (approvalError) {
-        console.error('❌ Approval hook error:', approvalError)
-      }
       setError(`Failed to approve PYUSD: ${err instanceof Error ? err.message : 'Unknown error'}. Please check your wallet and try again.`)
     }
   }
@@ -174,7 +157,6 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       
       // Try to refetch master code
       if (!isLoadingMasterCode) {
-        console.log('🔄 Attempting to refetch master access code...')
         refetchMasterCode()
       }
       return
@@ -186,21 +168,12 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       return
     }
 
-    console.log('📅 Creating booking for', selectedDates.length, 'days', {
-      masterCode,
-      hasValidMasterCode,
-      selectedDatesCount: selectedDates.length,
-      dates: selectedDates.map(d => d.toDateString())
-    })
-
     try {
       await createMultiDayBooking(selectedDates, masterCode)
-      console.log('✅ Multi-day booking process started')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(`Failed to create booking: ${errorMessage}`)
       setBookingError(`Failed to create booking: ${errorMessage}`)
-      console.error('❌ Booking creation error:', err)
       setCurrentStep('confirm')
     }
   }
@@ -209,11 +182,9 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const handleContinueBooking = async () => {
     try {
       await continueMultiDayBooking()
-      console.log('✅ Continuing to next night booking')
     } catch (err) {
       setError('Failed to continue booking. Please try again.')
       setBookingError('Failed to continue booking')
-      console.error('❌ Continue booking error:', err)
     }
   }
 
@@ -228,22 +199,18 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   useEffect(() => {
     if (currentStep === 'create-booking' && 
         !isBookingPending && 
-        !isBookingConfirming && 
-        !isBookingConfirmed && 
-        !isMultiBookingInProgress &&
+        !isBookingConfirming &&
         hasValidMasterCode &&
-        selectedDates.length > 0) {
-      console.log('🚀 Auto-starting booking creation...')
+        selectedDates.length > 0 &&
+        totalBookings === 0) {  // Only start if not already started
       handleCreateBooking()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, isBookingPending, isBookingConfirming, isBookingConfirmed, isMultiBookingInProgress, hasValidMasterCode, selectedDates.length])
+  }, [currentStep, isBookingPending, isBookingConfirming, hasValidMasterCode, selectedDates.length, totalBookings])
 
   // Handle multi-booking progression - continue to next booking when current one is confirmed
   useEffect(() => {
     if (isBookingConfirmed && currentStep === 'create-booking' && hasMoreBookings && !isBookingPending && !isBookingConfirming) {
-      console.log(`✅ Booking ${currentBookingIndex + 1} confirmed, continuing to next booking...`)
-      // Add small delay to ensure transaction is fully processed
       setTimeout(() => {
         handleContinueBooking()
       }, 1000)
@@ -251,10 +218,9 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBookingConfirmed, currentStep, hasMoreBookings, currentBookingIndex, isBookingPending, isBookingConfirming])
 
-  // Auto-progress to success after all bookings are completedew
+  // Auto-progress to success after all bookings are completed
   useEffect(() => {
     if (isMultiBookingComplete && currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming) {
-      console.log('✅ All bookings completed successfully!')
       refetchSubVaults()
       setTimeout(() => {
         setCurrentStep('success')
@@ -270,7 +236,6 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
         !hasMoreBookings &&
         !isBookingPending && 
         !isBookingConfirming) {
-      console.log('✅ Single booking completed!')
       refetchSubVaults()
       setTimeout(() => {
         setCurrentStep('success')
@@ -282,7 +247,6 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   useEffect(() => {
     return () => {
       if (isMultiBookingInProgress) {
-        console.log('🧹 Cleaning up multi-booking state')
         resetMultiBooking()
       }
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { Button } from '@/components/ui/Button'
 import { parseUnits, formatUnits } from 'viem'
@@ -64,20 +64,6 @@ export function CreateVault() {
         throw new Error('Master access code must be at least 4 characters')  
       }
       
-      console.log('🏗️ Creating vault with validated params:', {
-        vaultId: formData.vaultId.trim(),
-        propertyDetails: formData.propertyDetails.trim(),
-        nightPrice: dailyBasePriceInWei.toString(),
-        nightPriceFormatted: formatUnits(dailyBasePriceInWei, 6),
-        masterAccessCode: formData.masterAccessCode.trim(),
-        params: [
-          formData.vaultId.trim(),
-          formData.propertyDetails.trim(),
-          dailyBasePriceInWei,
-          formData.masterAccessCode.trim()
-        ]
-      })
-      
       // Save the master code before creating vault
       setSavedCode(formData.masterAccessCode.trim())
       
@@ -95,9 +81,11 @@ export function CreateVault() {
   }
 
   // Show success modal when transaction is confirmed
-  if (isConfirmed && !showSuccessModal && savedCode) {
-    setShowSuccessModal(true)
-  }
+  useEffect(() => {
+    if (isConfirmed && !showSuccessModal && savedCode) {
+      setShowSuccessModal(true)
+    }
+  }, [isConfirmed, showSuccessModal, savedCode])
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(savedCode)

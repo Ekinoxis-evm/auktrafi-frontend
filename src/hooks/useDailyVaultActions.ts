@@ -83,15 +83,6 @@ export function useDailyVaultActions(parentVaultId: string) {
       throw new Error('Master access code is required')
     }
 
-    console.log('🌙 Starting multi-night booking:', {
-      vaultId: parentVaultId,
-      contractAddress,
-      chainId,
-      dates: dates.map(d => d.toDateString()),
-      count: dates.length,
-      masterCode: `***${masterCode.slice(-4)}` // Only show last 4 chars for security
-    })
-
     // Reset state for new booking process
     setCurrentBookingIndex(0)
     setTotalBookings(dates.length)
