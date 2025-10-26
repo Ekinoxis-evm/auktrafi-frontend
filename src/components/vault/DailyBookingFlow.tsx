@@ -16,7 +16,7 @@ import { CONTRACT_ADDRESSES } from '@/config/wagmi'
 import { sepolia, arbitrumSepolia } from 'wagmi/chains'
 import Link from 'next/link'
 
-type BookingStep = 'select-dates' | 'confirm' | 'approve-pyusd' | 'create-booking' | 'success'
+type BookingStep = 'select-dates' | 'confirm' | 'create-vault' | 'approve-pyusd' | 'create-reservation' | 'success'
 
 interface DailyBookingFlowProps {
   vaultId: string
@@ -40,6 +40,12 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const { dailyBasePrice: parentVaultDailyPrice } = useVaultInfo(parentVaultAddress)
   
   const {
+    createNightVault,
+    createReservationOnSubVault,
+    setBookingParams,
+    subVaultAddress,
+    bookingPhase,
+    currentNightNumber,
     createMultiDayBooking,
     continueMultiDayBooking,
     resetMultiBooking,

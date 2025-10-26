@@ -1,14 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useChainId, useReadContract } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
 import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
+import DigitalHouseVaultABI from '@/contracts/abis/DigitalHouseVault.json'
 import { dateToNightNumber } from '@/lib/nightUtils'
+import { Address } from 'viem'
 
 /**
- * Hook for creating night reservations and managing bookings
- * Uses getOrCreateNightVault for each individual night
+ * Hook for creating night bookings with proper reservation staking
+ * 
+ * CORRECT FLOW:
+ * 1. getOrCreateNightVault() - Creates/gets sub-vault address
+ * 2. (Frontend approves PYUSD to sub-vault)
+ * 3. createReservation() - Stakes PYUSD on sub-vault
  */
 export function useDailyVaultActions(parentVaultId: string) {
   const chainId = useChainId()
@@ -18,7 +24,12 @@ export function useDailyVaultActions(parentVaultId: string) {
   const [totalBookings, setTotalBookings] = useState(0)
   const [bookingDates, setBookingDates] = useState<Date[]>([])
   const [bookingMasterCode, setBookingMasterCode] = useState('')
+  const [bookingStakeAmount, setBookingStakeAmount] = useState<bigint>(BigInt(0))
+  const [bookingCheckInDate, setBookingCheckInDate] = useState<bigint>(BigInt(0))
+  const [bookingCheckOutDate, setBookingCheckOutDate] = useState<bigint>(BigInt(0))
+  const [currentSubVault, setCurrentSubVault] = useState<Address | null>(null)
   const [multiBookingError, setMultiBookingError] = useState<string>('')
+  const [bookingPhase, setBookingPhase] = useState<'create-vault' | 'create-reservation'>('create-vault')
 
   const {
     data: hash,
@@ -62,11 +73,33 @@ export function useDailyVaultActions(parentVaultId: string) {
    * @param dates Array of nights to book
    * @param masterCode Master access code from parent vault
    */
-  const createMultiDayBooking = async (dates: Date[], masterCode: string) => {
+  /**
+   * Hook to get sub-vault address for current booking night
+   */
+  const currentNightNumber = bookingDates[currentBookingIndex] 
+    ? dateToNightNumber(bookingDates[currentBookingIndex])
+    : 0
+
+  const { data: fetchedSubVaultAddress } = useReadContract({
+    address: contractAddress,
+    abi: DigitalHouseFactoryABI,
+    functionName: 'getNightSubVault',
+    args: [parentVaultId, BigInt(currentNightNumber)],
+    query: {
+      enabled: !!(contractAddress && parentVaultId && currentNightNumber > 0 && bookingPhase === 'create-reservation'),
+    },
+  })
+
+  // Update current sub-vault when fetched
+  const subVaultAddress = (fetchedSubVaultAddress as Address) || currentSubVault
+
+  /**
+   * Step 1: Create sub-vault structure
+   * Returns the night number for the created vault
+   */
+  const createNightVault = async (dates: Date[], masterCode: string) => {
     if (!contractAddress) {
-      const error = 'Contract address not found for current chain'
-      console.error('❌', error, { chainId })
-      throw new Error(error)
+      throw new Error('Contract address not found for current chain')
     }
 
     if (dates.length === 0) {
@@ -77,30 +110,52 @@ export function useDailyVaultActions(parentVaultId: string) {
       throw new Error('Master access code is required')
     }
 
-    // Reset state for new booking process
+    // Save booking params
     setCurrentBookingIndex(0)
     setTotalBookings(dates.length)
     setBookingDates(dates.sort((a, b) => a.getTime() - b.getTime()))
     setBookingMasterCode(masterCode)
+    setBookingPhase('create-vault')
     setMultiBookingError('')
-    reset() // Reset any previous transaction state
+    reset()
 
-    // Start with the first night
     const firstDate = dates[0]
     const nightNumber = dateToNightNumber(firstDate)
 
-    try {
-      const result = await writeContract({
-        address: contractAddress,
-        abi: DigitalHouseFactoryABI,
-        functionName: 'getOrCreateNightVault',
-        args: [parentVaultId, BigInt(nightNumber), masterCode],
-      })
-      
-      return result
-    } catch (err) {
-      throw err
-    }
+    return writeContract({
+      address: contractAddress,
+      abi: DigitalHouseFactoryABI,
+      functionName: 'getOrCreateNightVault',
+      args: [parentVaultId, BigInt(nightNumber), masterCode],
+    })
+  }
+
+  /**
+   * Step 2: Create reservation on the sub-vault
+   * Must be called AFTER sub-vault is created and PYUSD is approved to it
+   */
+  const createReservationOnSubVault = async (
+    subVaultAddress: Address,
+    stakeAmount: bigint,
+    checkInDate: bigint,
+    checkOutDate: bigint
+  ) => {
+    setBookingPhase('create-reservation')
+    
+    return writeContract({
+      address: subVaultAddress,
+      abi: DigitalHouseVaultABI,
+      functionName: 'createReservation',
+      args: [stakeAmount, checkInDate, checkOutDate],
+    })
+  }
+
+  /**
+   * Legacy function - DEPRECATED
+   * Use createNightVault + createReservationOnSubVault instead
+   */
+  const createMultiDayBooking = async (dates: Date[], masterCode: string) => {
+    return createNightVault(dates, masterCode)
   }
 
   /**
@@ -142,6 +197,15 @@ export function useDailyVaultActions(parentVaultId: string) {
   }
 
   /**
+   * Set booking parameters for reservation creation
+   */
+  const setBookingParams = (stakeAmount: bigint, checkInDate: bigint, checkOutDate: bigint) => {
+    setBookingStakeAmount(stakeAmount)
+    setBookingCheckInDate(checkInDate)
+    setBookingCheckOutDate(checkOutDate)
+  }
+
+  /**
    * Reset the multi-booking state
    */
   const resetMultiBooking = () => {
@@ -149,6 +213,11 @@ export function useDailyVaultActions(parentVaultId: string) {
     setTotalBookings(0)
     setBookingDates([])
     setBookingMasterCode('')
+    setBookingStakeAmount(BigInt(0))
+    setBookingCheckInDate(BigInt(0))
+    setBookingCheckOutDate(BigInt(0))
+    setCurrentSubVault(null)
+    setBookingPhase('create-vault')
     setMultiBookingError('')
     reset()
   }
@@ -166,11 +235,23 @@ export function useDailyVaultActions(parentVaultId: string) {
   const hasMoreBookings = isMultiBookingInProgress && currentBookingIndex < totalBookings - 1
 
   return {
+    // New two-step booking functions
+    createNightVault,
+    createReservationOnSubVault,
+    setBookingParams,
+    subVaultAddress,
+    bookingPhase,
+    currentNightNumber,
+    bookingStakeAmount,
+    bookingCheckInDate,
+    bookingCheckOutDate,
+    // Legacy functions
     createSingleDayBooking,
     createMultiDayBooking,
     continueMultiDayBooking,
     resetMultiBooking,
     setBookingError,
+    // Transaction state
     isPending,
     isConfirming,
     isConfirmed,
