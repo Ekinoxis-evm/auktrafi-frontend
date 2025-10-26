@@ -71,7 +71,8 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   const totalCost = dailyPrice * BigInt(selectedDates.length)
 
 
-  // IMPORTANT: Approve PYUSD to factory contract, not parent vault
+  // CRITICAL: Approve PYUSD to SUB-VAULT (not factory!)
+  // Sub-vault address comes from useDailyVaultActions after vault creation
   const {
     approve: approvePYUSD,
     needsApproval,
@@ -82,7 +83,8 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     isConfirming: isApproveConfirming,
     isConfirmed: isApproveConfirmed,
     error: approvalError,
-  } = usePYUSDApproval(address, factoryAddress)
+    refetchAllowance,
+  } = usePYUSDApproval(address, subVaultAddress || factoryAddress)
 
   // Handle date selection
   const handleDateSelect = (dates: Date[]) => {
@@ -188,6 +190,46 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     }
   }
 
+  // Handle creating the actual reservation after sub-vault is created
+  const handleCreateReservation = async () => {
+    if (!subVaultAddress) {
+      setError('Sub-vault address not available. Please try again.')
+      return
+    }
+
+    if (!address) {
+      setError('Wallet not connected')
+      return
+    }
+
+    try {
+      console.log('💰 Creating reservation on sub-vault:', {
+        subVaultAddress,
+        stakeAmount: dailyPrice.toString(),
+        totalCost: totalCost.toString()
+      })
+
+      // Calculate check-in/out dates (timestamps for the vault)
+      const firstDate = selectedDates[0]
+      const checkInTimestamp = BigInt(Math.floor(firstDate.getTime() / 1000))
+      const checkOutTimestamp = checkInTimestamp + BigInt(86400) // 1 day later
+
+      await createReservationOnSubVault(
+        subVaultAddress,
+        dailyPrice,          // stakeAmount
+        checkInTimestamp,    // checkInDate
+        checkOutTimestamp    // checkOutDate
+      )
+
+      console.log('✅ Reservation transaction submitted!')
+    } catch (err) {
+      console.error('❌ Failed to create reservation:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      setError(`Failed to create reservation: ${errorMessage}`)
+      alert(`Reservation failed: ${errorMessage}`)
+    }
+  }
+
   // Handle continuing multi-day booking
   const handleContinueBooking = async () => {
     try {
@@ -198,14 +240,23 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     }
   }
 
-  // Auto-progress after approval
+  // Auto-progress after INITIAL approval (before vault creation)
   useEffect(() => {
-    if (isApproveConfirmed && currentStep === 'approve-pyusd') {
+    if (isApproveConfirmed && currentStep === 'approve-pyusd' && !subVaultAddress) {
+      console.log('✅ Initial PYUSD approved, creating sub-vault...')
       setCurrentStep('create-vault')
     }
-  }, [isApproveConfirmed, currentStep])
+  }, [isApproveConfirmed, currentStep, subVaultAddress])
 
-  // Auto-create booking after moving to create-vault step
+  // Auto-progress after SUB-VAULT approval (before reservation)
+  useEffect(() => {
+    if (isApproveConfirmed && currentStep === 'approve-pyusd' && subVaultAddress) {
+      console.log('✅ PYUSD approved to sub-vault, creating reservation...')
+      setCurrentStep('create-reservation')
+    }
+  }, [isApproveConfirmed, currentStep, subVaultAddress])
+
+  // Auto-create vault after moving to create-vault step
   useEffect(() => {
     if (currentStep === 'create-vault' && 
         !isBookingPending && 
@@ -213,7 +264,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
         hasValidMasterCode &&
         selectedDates.length > 0 &&
         totalBookings === 0) {  // Only start if not already started
-      console.log('🎬 Auto-starting booking creation...', {
+      console.log('🎬 Auto-starting vault creation...', {
         currentStep,
         isBookingPending,
         isBookingConfirming,
@@ -226,6 +277,19 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, isBookingPending, isBookingConfirming, hasValidMasterCode, selectedDates.length, totalBookings])
 
+  // Auto-create reservation after moving to create-reservation step
+  useEffect(() => {
+    if (currentStep === 'create-reservation' && 
+        !isBookingPending && 
+        !isBookingConfirming &&
+        subVaultAddress &&
+        selectedDates.length > 0) {
+      console.log('🎬 Auto-starting reservation creation on sub-vault...')
+      handleCreateReservation()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, isBookingPending, isBookingConfirming, subVaultAddress, selectedDates.length])
+
   // Handle multi-booking progression - continue to next booking when current one is confirmed
   useEffect(() => {
     if (isBookingConfirmed && currentStep === 'create-vault' && hasMoreBookings && !isBookingPending && !isBookingConfirming) {
@@ -236,32 +300,46 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBookingConfirmed, currentStep, hasMoreBookings, currentBookingIndex, isBookingPending, isBookingConfirming])
 
-  // Auto-progress to success after all bookings are completed
+  // Auto-progress to success after reservation is created
   useEffect(() => {
-    if (isMultiBookingComplete && currentStep === 'create-vault' && !isBookingPending && !isBookingConfirming) {
+    if (isBookingConfirmed && currentStep === 'create-reservation' && !isBookingPending && !isBookingConfirming) {
+      console.log('✅ Reservation created and confirmed!')
       refetchSubVaults()
       setTimeout(() => {
         setCurrentStep('success')
       }, 500)
     }
-  }, [isMultiBookingComplete, currentStep, refetchSubVaults, isBookingPending, isBookingConfirming])
+  }, [isBookingConfirmed, currentStep, refetchSubVaults, isBookingPending, isBookingConfirming])
 
-  // Handle single booking completion (when not multi-booking)
+  // Handle vault creation completion - move to approve or create reservation
   useEffect(() => {
     if (isBookingConfirmed && 
         currentStep === 'create-vault' && 
         !isMultiBookingInProgress && 
         !hasMoreBookings &&
         !isBookingPending && 
-        !isBookingConfirming) {
+        !isBookingConfirming &&
+        subVaultAddress) {
       console.log('✅ Night vault created! Sub-vault address:', subVaultAddress)
-      console.log('⚠️ CRITICAL: Now need to call createReservation() on this sub-vault to complete booking')
-      refetchSubVaults()
+      
+      // Refetch allowance for the NEW sub-vault address
+      refetchAllowance()
+      
+      // Check if we need to approve PYUSD to this specific sub-vault
       setTimeout(() => {
-        setCurrentStep('success')
-      }, 500)
+        const needsApprove = needsApproval(totalCost)
+        console.log('💰 Checking approval for sub-vault:', { subVaultAddress, needsApprove, totalCost: totalCost.toString() })
+        
+        if (needsApprove) {
+          console.log('⚠️ Need to approve PYUSD to sub-vault before creating reservation')
+          setCurrentStep('approve-pyusd')
+        } else {
+          console.log('✅ Already approved, moving to create reservation')
+          setCurrentStep('create-reservation')
+        }
+      }, 1000)
     }
-  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, refetchSubVaults, isBookingPending, isBookingConfirming, subVaultAddress])
+  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, isBookingPending, isBookingConfirming, subVaultAddress, refetchAllowance, needsApproval, totalCost])
 
   // Cleanup multi-booking state when component unmounts or when starting fresh
   useEffect(() => {
@@ -525,44 +603,38 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
           <div className="space-y-4">
             <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-200">
               <h3 className="font-semibold text-blue-900 text-lg mb-2">
-                📝 Creating Your Booking
+                🏗️ Creating Night Vault
               </h3>
-              
-              {isMultiBookingInProgress && totalBookings > 1 ? (
-                <div className="space-y-4">
-                  <p className="text-blue-700">
-                    Creating reservations for 🌙 {totalBookings} nights (booking each night separately)...
-                  </p>
-                  
-                  {/* Progress Bar */}
-                  <div className="bg-blue-200 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-blue-600 h-full transition-all duration-500 ease-out"
-                      style={{ width: `${bookingProgress}%` }}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-between text-sm text-blue-700">
-                    <span>Progress: {Math.round(bookingProgress)}%</span>
-                    <span>Night {currentBookingIndex + 1} of {totalBookings}</span>
-                  </div>
-
-                  {currentBookingDate && (
-                    <p className="text-blue-800 font-medium">
-                      Currently booking: {currentBookingDate}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-blue-700 mb-4">
-                  Creating reservations for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}...
-                </p>
-              )}
-
+              <p className="text-blue-700 mb-4">
+                Setting up vault structure for 🌙 {selectedDates.length} night{selectedDates.length !== 1 ? 's' : ''}...
+              </p>
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                 <p className="text-blue-700 text-sm">
-                  {isBookingPending ? 'Submitting transaction...' : isBookingConfirming ? 'Confirming booking...' : 'Processing...'}
+                  {isBookingPending ? 'Waiting for signature...' : isBookingConfirming ? 'Creating vault...' : 'Processing...'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'create-reservation':
+        return (
+          <div className="space-y-4">
+            <div className="bg-green-50 rounded-lg p-6 border-2 border-green-200">
+              <h3 className="font-semibold text-green-900 text-lg mb-2">
+                💰 Staking Your Reservation
+              </h3>
+              <p className="text-green-700 mb-2">
+                Transferring {formatUnits(dailyPrice, 6)} PYUSD to sub-vault...
+              </p>
+              <p className="text-sm text-green-600 mb-4">
+                Sub-vault: {subVaultAddress?.slice(0, 6)}...{subVaultAddress?.slice(-4)}
+              </p>
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                <p className="text-green-700 text-sm">
+                  {isBookingPending ? 'Waiting for signature...' : isBookingConfirming ? 'Staking PYUSD...' : 'Processing...'}
                 </p>
               </div>
             </div>
