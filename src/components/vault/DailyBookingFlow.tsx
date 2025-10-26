@@ -175,11 +175,15 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
     }
 
     try {
+      console.log('🚀 Creating night vault for booking...')
       await createMultiDayBooking(selectedDates, masterCode)
+      console.log('✅ Night vault creation transaction submitted')
     } catch (err) {
+      console.error('❌ Failed to create night vault:', err)
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(`Failed to create booking: ${errorMessage}`)
       setBookingError(`Failed to create booking: ${errorMessage}`)
+      alert(`Booking failed: ${errorMessage}`)
       setCurrentStep('confirm')
     }
   }
@@ -242,12 +246,14 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
         !hasMoreBookings &&
         !isBookingPending && 
         !isBookingConfirming) {
+      console.log('✅ Night vault created! Sub-vault address:', subVaultAddress)
+      console.log('⚠️ CRITICAL: Now need to call createReservation() on this sub-vault to complete booking')
       refetchSubVaults()
       setTimeout(() => {
         setCurrentStep('success')
       }, 500)
     }
-  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, refetchSubVaults, isBookingPending, isBookingConfirming])
+  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, refetchSubVaults, isBookingPending, isBookingConfirming, subVaultAddress])
 
   // Cleanup multi-booking state when component unmounts or when starting fresh
   useEffect(() => {
