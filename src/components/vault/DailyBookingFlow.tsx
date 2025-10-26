@@ -213,6 +213,14 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
         hasValidMasterCode &&
         selectedDates.length > 0 &&
         totalBookings === 0) {  // Only start if not already started
+      console.log('🎬 Auto-starting booking creation...', {
+        currentStep,
+        isBookingPending,
+        isBookingConfirming,
+        hasValidMasterCode,
+        selectedDatesCount: selectedDates.length,
+        totalBookings
+      })
       handleCreateBooking()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
