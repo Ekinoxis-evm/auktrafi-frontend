@@ -127,7 +127,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
     // Skip approval if already approved
     if (!needsApprove) {
-      setCurrentStep('create-booking')
+      setCurrentStep('create-vault')
     } else {
       setCurrentStep('approve-pyusd')
     }
@@ -197,13 +197,13 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   // Auto-progress after approval
   useEffect(() => {
     if (isApproveConfirmed && currentStep === 'approve-pyusd') {
-      setCurrentStep('create-booking')
+      setCurrentStep('create-vault')
     }
   }, [isApproveConfirmed, currentStep])
 
-  // Auto-create booking after moving to create-booking step
+  // Auto-create booking after moving to create-vault step
   useEffect(() => {
-    if (currentStep === 'create-booking' && 
+    if (currentStep === 'create-vault' && 
         !isBookingPending && 
         !isBookingConfirming &&
         hasValidMasterCode &&
@@ -216,7 +216,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   // Handle multi-booking progression - continue to next booking when current one is confirmed
   useEffect(() => {
-    if (isBookingConfirmed && currentStep === 'create-booking' && hasMoreBookings && !isBookingPending && !isBookingConfirming) {
+    if (isBookingConfirmed && currentStep === 'create-vault' && hasMoreBookings && !isBookingPending && !isBookingConfirming) {
       setTimeout(() => {
         handleContinueBooking()
       }, 1000)
@@ -226,7 +226,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   // Auto-progress to success after all bookings are completed
   useEffect(() => {
-    if (isMultiBookingComplete && currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming) {
+    if (isMultiBookingComplete && currentStep === 'create-vault' && !isBookingPending && !isBookingConfirming) {
       refetchSubVaults()
       setTimeout(() => {
         setCurrentStep('success')
@@ -237,7 +237,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
   // Handle single booking completion (when not multi-booking)
   useEffect(() => {
     if (isBookingConfirmed && 
-        currentStep === 'create-booking' && 
+        currentStep === 'create-vault' && 
         !isMultiBookingInProgress && 
         !hasMoreBookings &&
         !isBookingPending && 
@@ -495,7 +495,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                 <div className="text-center py-4">
                   <p className="text-green-700 font-medium mb-2">✅ PYUSD already approved</p>
                   <Button
-                    onClick={() => setCurrentStep('create-booking')}
+                    onClick={() => setCurrentStep('create-vault')}
                     className="w-full"
                   >
                     Continue to Booking
@@ -506,7 +506,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
           </div>
         )
 
-      case 'create-booking':
+      case 'create-vault':
         return (
           <div className="space-y-4">
             <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-200">
