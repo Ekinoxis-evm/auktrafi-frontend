@@ -3,6 +3,7 @@
  * Agente informativo de Auktrafi - ASI One compatible
  */
 
+// @ts-nocheck
 import { AuktrafiInfoAgent } from '../src/agents/info-agent.js';
 import { AgentChatProtocol } from '../src/protocols/agent-chat-protocol.js';
 

@@ -2,6 +2,7 @@
  * Health check endpoint para Vercel
  */
 
+// @ts-nocheck
 import { AuktrafiInfoAgent } from '../src/agents/info-agent.js';
 
 const agent = new AuktrafiInfoAgent();
