@@ -23,8 +23,8 @@ export const config = createConfig({
  */
 export const CONTRACT_ADDRESSES = {
   // TESTNETS (Active) - Night-by-Night System
-  [sepolia.id]: '0x8d0A0Ff1516ff56b36f55D0348D58A63b2751E91', // DigitalHouseFactory - Sepolia
-  [arbitrumSepolia.id]: '0xBdB8AcD5c9feA0C7bC5D3ec5F99E2C198526a58F', // DigitalHouseFactory - Arbitrum Sepolia
+  [sepolia.id]: '0x2B7399bce5fCa0715d98D0aD3FD4661AA261fD6E', // DigitalHouseFactory - Sepolia
+  [arbitrumSepolia.id]: '0x3d948AEE9A3eC7760e05A09797691079dE6B4E59', // DigitalHouseFactory - Arbitrum Sepolia
   
   // MAINNETS (Not deployed yet)
   [mainnet.id]: '0x0000000000000000000000000000000000000000', // TODO: Deploy to mainnet

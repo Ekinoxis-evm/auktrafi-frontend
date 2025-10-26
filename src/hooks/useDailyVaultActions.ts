@@ -70,17 +70,26 @@ export function useDailyVaultActions(parentVaultId: string) {
    */
   const createMultiDayBooking = async (dates: Date[], masterCode: string) => {
     if (!contractAddress) {
-      throw new Error('Contract address not found for current chain')
+      const error = 'Contract address not found for current chain'
+      console.error('❌', error, { chainId })
+      throw new Error(error)
     }
 
     if (dates.length === 0) {
       throw new Error('No dates selected')
     }
 
+    if (!masterCode || masterCode.trim().length === 0) {
+      throw new Error('Master access code is required')
+    }
+
     console.log('🌙 Starting multi-night booking:', {
       vaultId: parentVaultId,
+      contractAddress,
+      chainId,
       dates: dates.map(d => d.toDateString()),
       count: dates.length,
+      masterCode: `***${masterCode.slice(-4)}` // Only show last 4 chars for security
     })
 
     // Reset state for new booking process
@@ -95,14 +104,36 @@ export function useDailyVaultActions(parentVaultId: string) {
     const firstDate = dates[0]
     const nightTimestamp = dateToTimestamp(firstDate)
 
-    console.log('🌙 Booking night 1 of', dates.length, ':', firstDate.toDateString())
-
-    return writeContract({
-      address: contractAddress,
-      abi: DigitalHouseFactoryABI,
+    console.log('🌙 Initiating transaction for night 1 of', dates.length, ':', {
+      date: firstDate.toDateString(),
+      timestamp: nightTimestamp,
+      parentVaultId,
+      contractAddress,
       functionName: 'getOrCreateNightVault',
       args: [parentVaultId, BigInt(nightTimestamp), masterCode],
     })
+
+    try {
+      const result = await writeContract({
+        address: contractAddress,
+        abi: DigitalHouseFactoryABI,
+        functionName: 'getOrCreateNightVault',
+        args: [parentVaultId, BigInt(nightTimestamp), masterCode],
+      })
+      
+      console.log('✅ Transaction submitted:', result)
+      return result
+    } catch (err) {
+      console.error('❌ writeContract failed:', err)
+      console.error('❌ Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        contractAddress,
+        parentVaultId,
+        nightTimestamp,
+        error: err
+      })
+      throw err
+    }
   }
 
   /**
@@ -111,7 +142,9 @@ export function useDailyVaultActions(parentVaultId: string) {
    */
   const continueMultiDayBooking = async () => {
     if (!contractAddress) {
-      throw new Error('Contract address not found for current chain')
+      const error = 'Contract address not found for current chain'
+      console.error('❌', error, { chainId })
+      throw new Error(error)
     }
 
     const nextIndex = currentBookingIndex + 1
@@ -124,17 +157,36 @@ export function useDailyVaultActions(parentVaultId: string) {
     const nextDate = bookingDates[nextIndex]
     const nightTimestamp = dateToTimestamp(nextDate)
 
-    console.log(`🌙 Booking night ${nextIndex + 1} of ${totalBookings}:`, nextDate.toDateString())
+    console.log(`🌙 Continuing to night ${nextIndex + 1} of ${totalBookings}:`, {
+      date: nextDate.toDateString(),
+      timestamp: nightTimestamp,
+      parentVaultId,
+      masterCode: `***${bookingMasterCode.slice(-4)}`,
+    })
 
     setCurrentBookingIndex(nextIndex)
     reset() // Reset transaction state for next booking
 
-    return writeContract({
-      address: contractAddress,
-      abi: DigitalHouseFactoryABI,
-      functionName: 'getOrCreateNightVault',
-      args: [parentVaultId, BigInt(nightTimestamp), bookingMasterCode],
-    })
+    try {
+      const result = await writeContract({
+        address: contractAddress,
+        abi: DigitalHouseFactoryABI,
+        functionName: 'getOrCreateNightVault',
+        args: [parentVaultId, BigInt(nightTimestamp), bookingMasterCode],
+      })
+      
+      console.log(`✅ Transaction submitted for night ${nextIndex + 1}:`, result)
+      return result
+    } catch (err) {
+      console.error(`❌ Failed to book night ${nextIndex + 1}:`, err)
+      console.error('❌ Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        date: nextDate.toDateString(),
+        timestamp: nightTimestamp,
+        error: err
+      })
+      throw err
+    }
   }
 
   /**
