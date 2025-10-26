@@ -29,7 +29,7 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   const { contractAddress: factoryAddress } = useDigitalHouseFactory()
   const { getDailyPrice, refetch: refetchSubVaults } = useDailySubVaults(vaultId)
-  const { masterCode, isLoading: isLoadingMasterCode } = useMasterAccessCode(parentVaultAddress)
+  const { masterCode, isLoading: isLoadingMasterCode, hasValidMasterCode, refetch: refetchMasterCode } = useMasterAccessCode(parentVaultAddress)
   const { dailyBasePrice: parentVaultDailyPrice } = useVaultInfo(parentVaultAddress)
   
   const {
@@ -165,9 +165,18 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   // Handle booking creation
   const handleCreateBooking = async () => {
-    if (!masterCode) {
-      setError('Master access code not available. Please try again.')
-      setBookingError('Master access code not available')
+    if (!hasValidMasterCode || !masterCode) {
+      const errorMsg = isLoadingMasterCode 
+        ? 'Loading master access code...' 
+        : 'Master access code not available. Please try refreshing the page.'
+      setError(errorMsg)
+      setBookingError(errorMsg)
+      
+      // Try to refetch master code
+      if (!isLoadingMasterCode) {
+        console.log('🔄 Attempting to refetch master access code...')
+        refetchMasterCode()
+      }
       return
     }
 
@@ -177,14 +186,20 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       return
     }
 
-    console.log('📅 Creating booking for', selectedDates.length, 'days')
+    console.log('📅 Creating booking for', selectedDates.length, 'days', {
+      masterCode,
+      hasValidMasterCode,
+      selectedDatesCount: selectedDates.length,
+      dates: selectedDates.map(d => d.toDateString())
+    })
 
     try {
       await createMultiDayBooking(selectedDates, masterCode)
       console.log('✅ Multi-day booking process started')
     } catch (err) {
-      setError('Failed to create booking. Please try again.')
-      setBookingError('Failed to create booking. Please try again.')
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      setError(`Failed to create booking: ${errorMessage}`)
+      setBookingError(`Failed to create booking: ${errorMessage}`)
       console.error('❌ Booking creation error:', err)
       setCurrentStep('confirm')
     }
@@ -211,38 +226,57 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   // Auto-create booking after moving to create-booking step
   useEffect(() => {
-    if (currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming && !isBookingConfirmed && !isMultiBookingInProgress) {
+    if (currentStep === 'create-booking' && 
+        !isBookingPending && 
+        !isBookingConfirming && 
+        !isBookingConfirmed && 
+        !isMultiBookingInProgress &&
+        hasValidMasterCode &&
+        selectedDates.length > 0) {
+      console.log('🚀 Auto-starting booking creation...')
       handleCreateBooking()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, isBookingPending, isBookingConfirming, isBookingConfirmed, isMultiBookingInProgress])
+  }, [currentStep, isBookingPending, isBookingConfirming, isBookingConfirmed, isMultiBookingInProgress, hasValidMasterCode, selectedDates.length])
 
   // Handle multi-booking progression - continue to next booking when current one is confirmed
   useEffect(() => {
-    if (isBookingConfirmed && currentStep === 'create-booking' && hasMoreBookings) {
+    if (isBookingConfirmed && currentStep === 'create-booking' && hasMoreBookings && !isBookingPending && !isBookingConfirming) {
       console.log(`✅ Booking ${currentBookingIndex + 1} confirmed, continuing to next booking...`)
-      handleContinueBooking()
+      // Add small delay to ensure transaction is fully processed
+      setTimeout(() => {
+        handleContinueBooking()
+      }, 1000)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isBookingConfirmed, currentStep, hasMoreBookings, currentBookingIndex])
+  }, [isBookingConfirmed, currentStep, hasMoreBookings, currentBookingIndex, isBookingPending, isBookingConfirming])
 
-  // Auto-progress to success after all bookings are completed
+  // Auto-progress to success after all bookings are completedew
   useEffect(() => {
-    if (isMultiBookingComplete && currentStep === 'create-booking') {
+    if (isMultiBookingComplete && currentStep === 'create-booking' && !isBookingPending && !isBookingConfirming) {
       console.log('✅ All bookings completed successfully!')
       refetchSubVaults()
-      setCurrentStep('success')
+      setTimeout(() => {
+        setCurrentStep('success')
+      }, 500)
     }
-  }, [isMultiBookingComplete, currentStep, refetchSubVaults])
+  }, [isMultiBookingComplete, currentStep, refetchSubVaults, isBookingPending, isBookingConfirming])
 
   // Handle single booking completion (when not multi-booking)
   useEffect(() => {
-    if (isBookingConfirmed && currentStep === 'create-booking' && !isMultiBookingInProgress && !hasMoreBookings) {
+    if (isBookingConfirmed && 
+        currentStep === 'create-booking' && 
+        !isMultiBookingInProgress && 
+        !hasMoreBookings &&
+        !isBookingPending && 
+        !isBookingConfirming) {
       console.log('✅ Single booking completed!')
       refetchSubVaults()
-      setCurrentStep('success')
+      setTimeout(() => {
+        setCurrentStep('success')
+      }, 500)
     }
-  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, refetchSubVaults])
+  }, [isBookingConfirmed, currentStep, isMultiBookingInProgress, hasMoreBookings, refetchSubVaults, isBookingPending, isBookingConfirming])
 
   // Cleanup multi-booking state when component unmounts or when starting fresh
   useEffect(() => {
@@ -398,6 +432,28 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                 <p className="text-sm text-gray-500 mb-4">⏳ Loading access code...</p>
               )}
 
+              {/* Master Code Status */}
+              {!hasValidMasterCode && (
+                <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800">🔑 Master Access Code Status</p>
+                      <p className="text-xs text-yellow-600 mt-1">
+                        {isLoadingMasterCode ? 'Loading access code...' : 'Access code not available'}
+                      </p>
+                    </div>
+                    {!isLoadingMasterCode && (
+                      <Button
+                        onClick={() => refetchMasterCode()}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1"
+                      >
+                        🔄 Retry
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <Button
                   onClick={() => setCurrentStep('select-dates')}
@@ -407,10 +463,15 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
                 </Button>
                 <Button
                   onClick={() => setCurrentStep('approve-pyusd')}
-                  disabled={isLoadingMasterCode || !masterCode}
+                  disabled={isLoadingMasterCode || !hasValidMasterCode}
                   className="flex-1"
                 >
-                  Proceed to Approve →
+                  {isLoadingMasterCode 
+                    ? '⏳ Loading Code...'
+                    : !hasValidMasterCode 
+                    ? '🔑 Access Code Required'
+                    : 'Proceed to Approve →'
+                  }
                 </Button>
               </div>
             </div>

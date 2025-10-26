@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useDigitalHouseFactory } from '@/hooks/useDigitalHouseFactory'
 import { Button } from '@/components/ui/Button'
-import { parseUnits } from 'viem'
+import { parseUnits, formatUnits } from 'viem'
 
 export function CreateVault() {
   const { createVault, isPending, isConfirming, isConfirmed, hash } = useDigitalHouseFactory()
@@ -47,25 +47,50 @@ export function CreateVault() {
     try {
       const dailyBasePriceInWei = parseUnits(formData.dailyBasePrice, 6) // PYUSD has 6 decimals
       
-      console.log('🏗️ Creating vault with params:', {
-        vaultId: formData.vaultId,
-        propertyDetails: formData.propertyDetails,
+      // Validate parameters before sending
+      if (dailyBasePriceInWei <= BigInt(0)) {
+        throw new Error('Daily base price must be greater than 0')
+      }
+      
+      if (!formData.vaultId.trim() || formData.vaultId.length < 3) {
+        throw new Error('Vault ID must be at least 3 characters')
+      }
+      
+      if (!formData.propertyDetails.trim() || formData.propertyDetails.length < 10) {
+        throw new Error('Property details must be at least 10 characters')
+      }
+      
+      if (!formData.masterAccessCode.trim() || formData.masterAccessCode.length < 4) {
+        throw new Error('Master access code must be at least 4 characters')  
+      }
+      
+      console.log('🏗️ Creating vault with validated params:', {
+        vaultId: formData.vaultId.trim(),
+        propertyDetails: formData.propertyDetails.trim(),
         nightPrice: dailyBasePriceInWei.toString(),
-        masterAccessCode: formData.masterAccessCode
+        nightPriceFormatted: formatUnits(dailyBasePriceInWei, 6),
+        masterAccessCode: formData.masterAccessCode.trim(),
+        params: [
+          formData.vaultId.trim(),
+          formData.propertyDetails.trim(),
+          dailyBasePriceInWei,
+          formData.masterAccessCode.trim()
+        ]
       })
       
       // Save the master code before creating vault
-      setSavedCode(formData.masterAccessCode)
+      setSavedCode(formData.masterAccessCode.trim())
       
       await createVault(
-        formData.vaultId,
-        formData.propertyDetails,
+        formData.vaultId.trim(),
+        formData.propertyDetails.trim(),
         dailyBasePriceInWei,
-        formData.masterAccessCode
+        formData.masterAccessCode.trim()
       )
     } catch (error) {
       console.error('❌ Error creating vault:', error)
-      alert(`Error creating vault: ${error}`)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`Error creating vault: ${errorMessage}`)
     }
   }
 
