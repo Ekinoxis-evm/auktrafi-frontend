@@ -27,26 +27,34 @@ export function AvailabilityManager({ vaultId }: AvailabilityManagerProps) {
   }
 
   const handleOpenNights = async () => {
-    if (selectedDates.length === 0) return
+    if (selectedDates.length === 0) {
+      alert('Please select at least one night')
+      return
+    }
     
     try {
-      await openNights(selectedDates)
-      // Clear selection after successful transaction
-      setSelectedDates([])
+      console.log('🔓 Opening nights:', selectedDates)
+      const result = await openNights(selectedDates)
+      console.log('✅ Transaction submitted:', result)
     } catch (err) {
-      console.error('Error opening nights:', err)
+      console.error('❌ Error opening nights:', err)
+      alert(`Failed to open nights: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
   const handleBlockNights = async () => {
-    if (selectedDates.length === 0) return
+    if (selectedDates.length === 0) {
+      alert('Please select at least one night')
+      return
+    }
     
     try {
-      await blockNights(selectedDates)
-      // Clear selection after successful transaction
-      setSelectedDates([])
+      console.log('🚫 Blocking nights:', selectedDates)
+      const result = await blockNights(selectedDates)
+      console.log('✅ Transaction submitted:', result)
     } catch (err) {
-      console.error('Error blocking nights:', err)
+      console.error('❌ Error blocking nights:', err)
+      alert(`Failed to block nights: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
@@ -141,12 +149,34 @@ export function AvailabilityManager({ vaultId }: AvailabilityManagerProps) {
         </div>
       )}
 
-      {/* Success Message */}
+      {/* Transaction Status */}
+      {isPending && (
+        <div className="mt-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 font-medium">
+            ⏳ Waiting for wallet signature...
+          </p>
+        </div>
+      )}
+      
+      {isConfirming && (
+        <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+          <p className="text-blue-800 font-medium">
+            ⏳ Transaction confirming on blockchain...
+          </p>
+        </div>
+      )}
+
       {isConfirmed && (
         <div className="mt-4 bg-green-50 border-2 border-green-200 rounded-lg p-4">
           <p className="text-green-800 font-medium">
             ✅ Availability updated successfully!
           </p>
+          <button
+            onClick={() => setSelectedDates([])}
+            className="mt-2 text-sm text-green-600 hover:text-green-700 underline"
+          >
+            Clear selection
+          </button>
         </div>
       )}
 

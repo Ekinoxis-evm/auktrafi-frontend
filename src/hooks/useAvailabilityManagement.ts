@@ -75,6 +75,10 @@ export function useAvailabilityManagement(vaultId: string) {
    * NOTE: Blocking must be done individually per night
    */
   const blockNights = async (nights: Date[]) => {
+    if (!nights || nights.length === 0) {
+      throw new Error('No nights selected')
+    }
+    
     // Block each night individually
     for (const night of nights) {
       await setNightAvailability(night, false)
@@ -86,9 +90,13 @@ export function useAvailabilityManagement(vaultId: string) {
    * Uses bulk window operation if multiple consecutive nights
    */
   const openNights = async (nights: Date[]) => {
+    if (!nights || nights.length === 0) {
+      throw new Error('No nights selected')
+    }
+    
     if (nights.length === 1) {
       return setNightAvailability(nights[0], true)
-    } else if (nights.length > 1) {
+    } else {
       // Use window for multiple consecutive nights (more gas efficient)
       const sortedNights = nights.sort((a, b) => a.getTime() - b.getTime())
       return setAvailabilityWindow(sortedNights[0], sortedNights[sortedNights.length - 1])
