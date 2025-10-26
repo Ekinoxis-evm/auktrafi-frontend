@@ -3,7 +3,7 @@
 import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
 import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
-import { dateToTimestamp } from '@/config/wagmi'
+import { dateToNightNumber } from '@/lib/nightUtils'
 
 /**
  * Hook for owner to manage night availability
@@ -33,20 +33,13 @@ export function useAvailabilityManagement(vaultId: string) {
       throw new Error('Contract address not found for current chain')
     }
 
-    const nightTimestamp = dateToTimestamp(nightDate)
-
-    console.log('🗓️ Setting night availability:', {
-      vaultId,
-      date: nightDate.toDateString(),
-      timestamp: nightTimestamp,
-      isAvailable,
-    })
+    const nightNumber = dateToNightNumber(nightDate)
 
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
       functionName: 'setNightAvailability',
-      args: [vaultId, BigInt(nightTimestamp), isAvailable],
+      args: [vaultId, BigInt(nightNumber), isAvailable],
     })
   }
 
@@ -65,25 +58,15 @@ export function useAvailabilityManagement(vaultId: string) {
       throw new Error('Contract address not found for current chain')
     }
 
-    const startTimestamp = dateToTimestamp(startNight)
-    const endTimestamp = dateToTimestamp(endNight)
-
-    // Calculate number of nights
-    const nightCount = Math.floor((endTimestamp - startTimestamp) / (24 * 60 * 60)) + 1
-
-    console.log('📅 Opening availability window:', {
-      vaultId,
-      startDate: startNight.toDateString(),
-      endDate: endNight.toDateString(),
-      nightCount,
-      note: 'This ONLY opens nights (makes them available)',
-    })
+    const startNightNumber = dateToNightNumber(startNight)
+    const endNightNumber = dateToNightNumber(endNight)
+    const nightCount = endNightNumber - startNightNumber + 1
 
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
       functionName: 'setAvailabilityWindow',
-      args: [vaultId, BigInt(startTimestamp), BigInt(endTimestamp), BigInt(nightCount)],
+      args: [vaultId, BigInt(startNightNumber), BigInt(endNightNumber), BigInt(nightCount)],
     })
   }
 
@@ -92,8 +75,6 @@ export function useAvailabilityManagement(vaultId: string) {
    * NOTE: Blocking must be done individually per night
    */
   const blockNights = async (nights: Date[]) => {
-    console.log('🚫 Blocking nights (individual calls):', nights.map(d => d.toDateString()))
-    
     // Block each night individually
     for (const night of nights) {
       await setNightAvailability(night, false)
@@ -105,8 +86,6 @@ export function useAvailabilityManagement(vaultId: string) {
    * Uses bulk window operation if multiple consecutive nights
    */
   const openNights = async (nights: Date[]) => {
-    console.log('✅ Opening nights:', nights.map(d => d.toDateString()))
-    
     if (nights.length === 1) {
       return setNightAvailability(nights[0], true)
     } else if (nights.length > 1) {

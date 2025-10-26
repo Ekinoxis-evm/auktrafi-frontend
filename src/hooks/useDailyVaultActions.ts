@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
 import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
-import { dateToTimestamp } from '@/config/wagmi'
+import { dateToNightNumber } from '@/lib/nightUtils'
 
 /**
  * Hook for creating night reservations and managing bookings
@@ -41,13 +41,7 @@ export function useDailyVaultActions(parentVaultId: string) {
       throw new Error('Contract address not found for current chain')
     }
 
-    const nightTimestamp = dateToTimestamp(date)
-
-    console.log('🌙 Creating single night booking:', {
-      vaultId: parentVaultId,
-      date: date.toDateString(),
-      timestamp: nightTimestamp,
-    })
+    const nightNumber = dateToNightNumber(date)
 
     setCurrentBookingIndex(0)
     setTotalBookings(1)
@@ -58,7 +52,7 @@ export function useDailyVaultActions(parentVaultId: string) {
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
       functionName: 'getOrCreateNightVault',
-      args: [parentVaultId, BigInt(nightTimestamp), masterCode],
+      args: [parentVaultId, BigInt(nightNumber), masterCode],
     })
   }
 
@@ -93,36 +87,18 @@ export function useDailyVaultActions(parentVaultId: string) {
 
     // Start with the first night
     const firstDate = dates[0]
-    const nightTimestamp = dateToTimestamp(firstDate)
-
-    console.log('🌙 Initiating transaction for night 1 of', dates.length, ':', {
-      date: firstDate.toDateString(),
-      timestamp: nightTimestamp,
-      parentVaultId,
-      contractAddress,
-      functionName: 'getOrCreateNightVault',
-      args: [parentVaultId, BigInt(nightTimestamp), masterCode],
-    })
+    const nightNumber = dateToNightNumber(firstDate)
 
     try {
       const result = await writeContract({
         address: contractAddress,
         abi: DigitalHouseFactoryABI,
         functionName: 'getOrCreateNightVault',
-        args: [parentVaultId, BigInt(nightTimestamp), masterCode],
+        args: [parentVaultId, BigInt(nightNumber), masterCode],
       })
       
-      console.log('✅ Transaction submitted:', result)
       return result
     } catch (err) {
-      console.error('❌ writeContract failed:', err)
-      console.error('❌ Error details:', {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        contractAddress,
-        parentVaultId,
-        nightTimestamp,
-        error: err
-      })
       throw err
     }
   }
@@ -146,14 +122,7 @@ export function useDailyVaultActions(parentVaultId: string) {
     }
 
     const nextDate = bookingDates[nextIndex]
-    const nightTimestamp = dateToTimestamp(nextDate)
-
-    console.log(`🌙 Continuing to night ${nextIndex + 1} of ${totalBookings}:`, {
-      date: nextDate.toDateString(),
-      timestamp: nightTimestamp,
-      parentVaultId,
-      masterCode: `***${bookingMasterCode.slice(-4)}`,
-    })
+    const nightNumber = dateToNightNumber(nextDate)
 
     setCurrentBookingIndex(nextIndex)
     reset() // Reset transaction state for next booking
@@ -163,19 +132,11 @@ export function useDailyVaultActions(parentVaultId: string) {
         address: contractAddress,
         abi: DigitalHouseFactoryABI,
         functionName: 'getOrCreateNightVault',
-        args: [parentVaultId, BigInt(nightTimestamp), bookingMasterCode],
+        args: [parentVaultId, BigInt(nightNumber), bookingMasterCode],
       })
       
-      console.log(`✅ Transaction submitted for night ${nextIndex + 1}:`, result)
       return result
     } catch (err) {
-      console.error(`❌ Failed to book night ${nextIndex + 1}:`, err)
-      console.error('❌ Error details:', {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        date: nextDate.toDateString(),
-        timestamp: nightTimestamp,
-        error: err
-      })
       throw err
     }
   }

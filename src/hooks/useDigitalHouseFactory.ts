@@ -63,14 +63,14 @@ export function useDigitalHouseFactory() {
   // Night Vault System - Create or get a night sub-vault for booking
   const getOrCreateNightVault = async (
     parentVaultId: string,
-    nightTimestamp: number,
+    nightNumber: number,  // Simple night number: 1, 2, 3, etc.
     masterAccessCode: string
   ) => {
     return writeContract({
       address: contractAddress,
       abi: DigitalHouseFactoryABI,
       functionName: 'getOrCreateNightVault',
-      args: [parentVaultId, BigInt(nightTimestamp), masterAccessCode],
+      args: [parentVaultId, BigInt(nightNumber), masterAccessCode],
     })
   }
 
