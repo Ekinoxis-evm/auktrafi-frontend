@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useChainId, useReadContract } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
 import DigitalHouseFactoryABI from '@/contracts/abis/DigitalHouseFactory.json'
-import DigitalHouseVaultABI from '@/contracts/abis/DigitalHouseVault.json'
 import { dateToNightNumber } from '@/lib/nightUtils'
 
 /**
