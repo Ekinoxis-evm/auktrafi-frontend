@@ -14,6 +14,7 @@ import { useVaultInfo } from '@/hooks/useVaultInfo'
 import { FundWallet } from '@/components/FundWallet'
 import { CONTRACT_ADDRESSES } from '@/config/wagmi'
 import { sepolia, arbitrumSepolia } from 'wagmi/chains'
+import { dateToNightNumber } from '@/lib/nightUtils'
 import Link from 'next/link'
 
 type BookingStep = 'select-dates' | 'confirm' | 'create-vault' | 'approve-pyusd' | 'create-reservation' | 'success'
@@ -156,10 +157,41 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
 
   // Handle booking creation
   const handleCreateBooking = async () => {
+    console.log('🔍 VALIDATION START - Checking all requirements...')
+    
+    // Check 1: Wallet connected
+    if (!address) {
+      const error = 'Wallet not connected'
+      console.error('❌ VALIDATION FAILED:', error)
+      setError(error)
+      return
+    }
+    console.log('✅ Wallet connected:', address)
+
+    // Check 2: Supported chain
+    if (!isSupportedChain || !currentChainAddress) {
+      const error = `Unsupported network. Current: ${chainId}, Supported: Sepolia(${sepolia.id}), Arbitrum Sepolia(${arbitrumSepolia.id})`
+      console.error('❌ VALIDATION FAILED:', error)
+      setError(error)
+      return
+    }
+    console.log('✅ Supported chain:', chainId)
+
+    // Check 3: Factory address
+    if (!factoryAddress) {
+      const error = 'Factory address not available'
+      console.error('❌ VALIDATION FAILED:', error)
+      setError(error)
+      return
+    }
+    console.log('✅ Factory address:', factoryAddress)
+
+    // Check 4: Master access code
     if (!hasValidMasterCode || !masterCode) {
       const errorMsg = isLoadingMasterCode 
         ? 'Loading master access code...' 
         : 'Master access code not available. Please try refreshing the page.'
+      console.error('❌ VALIDATION FAILED:', errorMsg, { hasValidMasterCode, masterCode, isLoadingMasterCode })
       setError(errorMsg)
       setBookingError(errorMsg)
       
@@ -169,20 +201,59 @@ export function DailyBookingFlow({ vaultId, parentVaultAddress }: DailyBookingFl
       }
       return
     }
+    console.log('✅ Master code valid:', masterCode)
 
+    // Check 5: Dates selected
     if (selectedDates.length === 0) {
-      setError('No dates selected')
-      setBookingError('No dates selected')
+      const error = 'No dates selected'
+      console.error('❌ VALIDATION FAILED:', error)
+      setError(error)
+      setBookingError(error)
       return
     }
+    console.log('✅ Dates selected:', selectedDates.length, selectedDates.map(d => d.toDateString()))
+
+    // Check 6: Pricing available
+    if (dailyPrice <= BigInt(0)) {
+      const error = 'Pricing not available - owner may need to set availability first'
+      console.error('❌ VALIDATION FAILED:', error, { dailyPrice: dailyPrice.toString() })
+      setError(error)
+      return
+    }
+    console.log('✅ Daily price:', formatUnits(dailyPrice, 6), 'PYUSD')
+
+    // Check 7: Sufficient balance
+    if (!hasSufficientBalance(totalCost)) {
+      const error = `Insufficient PYUSD balance. Need: ${formatUnits(totalCost, 6)}, Have: ${pyusdBalance ? formatUnits(pyusdBalance, 6) : '0'}`
+      console.error('❌ VALIDATION FAILED:', error)
+      setError(error)
+      return
+    }
+    console.log('✅ Sufficient balance:', formatUnits(pyusdBalance || BigInt(0), 6), 'PYUSD')
+
+    console.log('🎯 ALL VALIDATIONS PASSED - Proceeding with night vault creation...')
 
     try {
-      console.log('🚀 Creating night vault for booking...')
+      console.log('📋 Booking parameters:', {
+        vaultId,
+        selectedDates: selectedDates.map(d => d.toDateString()),
+        nightNumbers: selectedDates.map(d => dateToNightNumber(d)),
+        masterCode,
+        stakeAmount: formatUnits(totalCost, 6) + ' PYUSD',
+        factoryAddress,
+        chainId
+      })
+      
       await createMultiDayBooking(selectedDates, masterCode)
-      console.log('✅ Night vault creation transaction submitted')
+      console.log('✅ Night vault creation transaction submitted successfully')
     } catch (err) {
-      console.error('❌ Failed to create night vault:', err)
+      console.error('❌ Transaction failed:', err)
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ Error details:', {
+        error: err,
+        message: errorMessage,
+        stack: err instanceof Error ? err.stack : 'No stack trace'
+      })
       setError(`Failed to create booking: ${errorMessage}`)
       setBookingError(`Failed to create booking: ${errorMessage}`)
       alert(`Booking failed: ${errorMessage}`)
