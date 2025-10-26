@@ -158,11 +158,24 @@ export default function ProfilePage() {
                   </button>
                 )}
                 <button
-                  onClick={logout}
+                  onClick={async () => {
+                    try {
+                      await logout()
+                      // Clear storage and redirect to home
+                      if (typeof window !== 'undefined') {
+                        localStorage.clear()
+                        sessionStorage.clear()
+                        window.location.href = '/'
+                      }
+                    } catch (err) {
+                      console.error('Logout error:', err)
+                      window.location.href = '/'
+                    }
+                  }}
                   className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg font-semibold hover:from-red-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
                   <span>🚪</span>
-                  Logout
+                  Full Logout
                 </button>
               </div>
             </div>
